@@ -1,0 +1,642 @@
+:root {
+  --bg: #101522;
+  --panel: #1a2236;
+  --panel-2: #24304d;
+  --text: #f7f4ea;
+  --accent: #ffd166;
+  --card: #2d3b5f;
+  --card-hover: #3a4c78;
+  --muted: rgba(247, 244, 234, 0.72);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  --radius: 22px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #1d2944 0%, var(--bg) 60%);
+  color: var(--text);
+}
+
+.wrap {
+  max-width: 1200px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 12px;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 10px;
+}
+
+.title {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+.subtitle {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.1;
+  color: var(--muted);
+}
+
+.panel {
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.arena {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.player-panel,
+.enemy-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 0;
+}
+
+.statline,
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.statline {
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.meta-row {
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.big-number {
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 900;
+}
+
+.hpbar {
+  width: 100%;
+  height: 14px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.fill {
+  height: 100%;
+  width: 100%;
+  transition: width 0.25s ease;
+}
+
+.fill.hp {
+  background: linear-gradient(90deg, #ff8a80, #ff5252);
+}
+
+.fill.enemy {
+  background: linear-gradient(90deg, #90f18d, #4caf50);
+}
+
+.fill.block {
+  background: linear-gradient(90deg, #8be0ff, #42a5f5);
+}
+
+.energy-row {
+  min-height: 30px;
+  margin: 2px 0 4px;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.hero-art,
+.enemy-art {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  min-height: 90px;
+  font-size: clamp(72px, 10vw, 140px);
+  line-height: 1;
+  user-select: none;
+}
+
+.enemy-art {
+  padding-top: 56px;
+}
+
+.enemy-base {
+  position: relative;
+  z-index: 1;
+  display: block;
+  line-height: 1;
+  transform: translateY(18px);
+}
+
+.hero-base-img {
+  position: relative;
+  z-index: 1;
+  width: min(220px, 90%);
+  max-height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
+}
+
+.intent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 38px;
+  font-weight: 900;
+}
+
+.enemy-intent {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  z-index: 12;
+  transform: translate(-50%, 0);
+  pointer-events: none;
+  animation: intentBounce 900ms ease-in-out infinite;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.status-pill {
+  min-height: 24px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.btn {
+  appearance: none;
+  border: 0;
+  border-radius: 18px;
+  padding: 10px 14px;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.08s ease, opacity 0.2s ease;
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #222;
+}
+
+.btn-secondary {
+  background: #3d4b6d;
+  color: var(--text);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hand {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(132px, 170px));
+  justify-content: center;
+  gap: 14px;
+  min-height: 0;
+}
+
+.card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  justify-items: center;
+  gap: 8px;
+  min-height: 240px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  padding: 10px 8px 12px;
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--card), #22314f);
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transform: translateY(0) scale(1);
+  transform-origin: center bottom;
+  transition: transform 0.16s ease, background 0.2s ease, opacity 0.2s ease, box-shadow 0.18s ease;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 226, 166, 0.45);
+  background:
+    radial-gradient(28px 28px at 10% 10%, transparent 62%, rgba(255, 225, 165, 0.55) 63% 67%, transparent 68%),
+    radial-gradient(28px 28px at 90% 10%, transparent 62%, rgba(255, 225, 165, 0.55) 63% 67%, transparent 68%),
+    radial-gradient(28px 28px at 10% 90%, transparent 62%, rgba(255, 225, 165, 0.45) 63% 67%, transparent 68%),
+    radial-gradient(28px 28px at 90% 90%, transparent 62%, rgba(255, 225, 165, 0.45) 63% 67%, transparent 68%),
+    radial-gradient(8px 8px at 10% 10%, rgba(255, 232, 186, 0.45), transparent 75%),
+    radial-gradient(8px 8px at 90% 10%, rgba(255, 232, 186, 0.45), transparent 75%),
+    radial-gradient(8px 8px at 10% 90%, rgba(255, 232, 186, 0.36), transparent 75%),
+    radial-gradient(8px 8px at 90% 90%, rgba(255, 232, 186, 0.36), transparent 75%),
+    linear-gradient(90deg, transparent 22%, rgba(255, 225, 165, 0.26) 34%, rgba(255, 225, 165, 0.26) 66%, transparent 78%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%, transparent 68%, rgba(0, 0, 0, 0.14));
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 225, 165, 0.24);
+  background:
+    radial-gradient(20px 9px at 50% 10%, rgba(255, 225, 165, 0.34), transparent 72%),
+    radial-gradient(20px 9px at 50% 90%, rgba(255, 225, 165, 0.3), transparent 72%),
+    radial-gradient(16px 7px at 38% 10%, rgba(255, 225, 165, 0.22), transparent 72%),
+    radial-gradient(16px 7px at 62% 10%, rgba(255, 225, 165, 0.22), transparent 72%),
+    radial-gradient(16px 7px at 38% 90%, rgba(255, 225, 165, 0.2), transparent 72%),
+    radial-gradient(16px 7px at 62% 90%, rgba(255, 225, 165, 0.2), transparent 72%),
+    linear-gradient(180deg, transparent 18%, rgba(255, 225, 165, 0.14) 50%, transparent 82%);
+}
+
+.card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.card:hover {
+  transform: translateY(-18px) scale(1.34);
+  background: linear-gradient(180deg, var(--card-hover), #2a3a5f);
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.45);
+  z-index: 30;
+}
+
+.card:focus-visible {
+  transform: translateY(-18px) scale(1.34);
+  background: linear-gradient(180deg, var(--card-hover), #2a3a5f);
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.45);
+  z-index: 30;
+}
+
+.card.card-type-block {
+  background: linear-gradient(180deg, #2f6a3f, #224f31);
+}
+
+.card.card-type-block:hover,
+.card.card-type-block:focus-visible {
+  background: linear-gradient(180deg, #3d7e4f, #2c6340);
+}
+
+.card.card-type-attack {
+  background: linear-gradient(180deg, #8a2f34, #5f1f24);
+}
+
+.card.card-type-attack:hover,
+.card.card-type-attack:focus-visible {
+  background: linear-gradient(180deg, #a33d43, #782a30);
+}
+
+.card.card-type-heal {
+  background: linear-gradient(180deg, #b94f8d, #7d3460);
+}
+
+.card.card-type-heal:hover,
+.card.card-type-heal:focus-visible {
+  background: linear-gradient(180deg, #cc5d9d, #944074);
+}
+
+.card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.card-cost {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.card-media {
+  width: clamp(96px, 84%, 136px);
+  height: 136px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-icon {
+  font-size: 42px;
+  line-height: 1;
+}
+
+.card-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 62%;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-value {
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.card-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.sword-swing {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 8;
+  font-size: 110px;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.5);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
+  animation: swing 520ms ease-out forwards;
+}
+
+.hero-slash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 9;
+  font-size: 120px;
+  pointer-events: none;
+  transform-origin: center;
+  animation: heroSlash 450ms ease-out forwards;
+}
+
+.enemy-hit {
+  animation: enemyFlash 300ms ease;
+}
+
+.hero-hit {
+  animation: heroBump 360ms ease;
+}
+
+@keyframes swing {
+  0% {
+    transform: translate(-40%, -120%) rotate(160deg) scale(0.6);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  60% {
+    transform: translate(10%, -10%) rotate(205deg) scale(1.1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(20%, 40%) rotate(215deg) scale(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes heroSlash {
+  0% {
+    transform: translate(120%, -80%) rotate(140deg) scale(0.7);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  60% {
+    transform: translate(-10%, -10%) rotate(95deg) scale(1.05);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-40%, 40%) rotate(70deg) scale(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes enemyFlash {
+  0% {
+    filter: none;
+  }
+
+  40% {
+    filter: brightness(2) saturate(2);
+  }
+
+  100% {
+    filter: none;
+  }
+}
+
+@keyframes heroBump {
+  0% {
+    transform: translateX(0) scale(1);
+    filter: none;
+  }
+
+  20% {
+    transform: translateX(18px) scale(1.05);
+    filter: brightness(1.35);
+  }
+
+  45% {
+    transform: translateX(-10px) scale(0.98);
+    filter: brightness(1.15);
+  }
+
+  100% {
+    transform: translateX(0) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes intentBounce {
+  0% {
+    transform: translate(-50%, 0);
+  }
+
+  50% {
+    transform: translate(-50%, -12px);
+  }
+
+  100% {
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 900px) {
+  .wrap {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .arena {
+    gap: 8px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .big-number {
+    font-size: 20px;
+  }
+
+  .hero-art,
+  .enemy-art {
+    min-height: 72px;
+    font-size: clamp(60px, 14vw, 100px);
+  }
+
+  .enemy-art {
+    padding-top: 44px;
+  }
+
+  .enemy-base {
+    transform: translateY(12px);
+  }
+
+  .enemy-intent {
+    top: 6px;
+  }
+
+  .intent {
+    padding: 6px 10px;
+    font-size: 28px;
+  }
+
+  .hand {
+    grid-template-columns: repeat(3, minmax(120px, 160px));
+    gap: 10px;
+  }
+
+  .card {
+    min-height: 214px;
+    padding: 8px 7px 10px;
+    border-radius: 18px;
+  }
+
+  .card:hover,
+  .card:focus-visible {
+    transform: translateY(-10px) scale(1.2);
+  }
+
+  .card-cost {
+    font-size: 14px;
+  }
+
+  .card-media {
+    width: clamp(84px, 82%, 122px);
+    height: 116px;
+  }
+
+  .card-icon {
+    font-size: 30px;
+  }
+
+  .card-value {
+    font-size: 30px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enemy-intent {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    grid-template-rows: auto auto auto;
+  }
+
+  .arena {
+    grid-template-columns: 1fr;
+  }
+
+  .hand {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card {
+    min-height: 198px;
+  }
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slay the Spire Jr.</title>
+  <link rel="stylesheet" href="spire.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">Slay the Spire Jr.</div>
+    <div class="subtitle">Simple attacks, blocks, and big buttons.</div>
+
+    <div class="arena">
+      <div class="panel player-panel">
+        <div>
+          <div class="meta-row">
+            <span>Hero</span>
+            <span id="fightCounter">Fight 1 of 3</span>
+          </div>
+
+          <div class="statline">
+            <span>❤️</span>
+            <span id="playerHpText" class="big-number">20 / 20</span>
+          </div>
+          <div class="hpbar"><div id="playerHpFill" class="fill hp"></div></div>
+
+          <div class="statline">
+            <span>🛡️</span>
+            <span id="playerBlockText" class="big-number">0</span>
+          </div>
+          <div class="hpbar"><div id="playerBlockFill" class="fill block"></div></div>
+
+          <div id="energyRow" class="energy-row">⚡⚡⚡</div>
+        </div>
+
+        <div class="hero-art" id="heroArt"><img id="heroBase" class="hero-base-img" src="assets/hero.png" alt="Hero" /></div>
+      </div>
+
+      <div class="panel enemy-panel">
+        <div>
+          <div class="meta-row">
+            <span>Bad Guy</span>
+            <span id="deckCounter">Deck 8 cards</span>
+          </div>
+
+          <div class="statline">
+            <span id="enemyName">🟢 Blob</span>
+            <span id="enemyHpText" class="big-number">14 / 14</span>
+          </div>
+          <div class="hpbar"><div id="enemyHpFill" class="fill enemy"></div></div>
+          <div class="enemy-art" id="enemyArt">
+            <span id="enemyBase" class="enemy-base">🟢</span>
+            <div class="intent enemy-intent" id="enemyIntent">🗡️ 2</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="controls">
+        <div id="statusText" class="status-pill">Play cards, then tap End Turn.</div>
+        <button id="endTurnBtn" class="btn btn-primary">End Turn</button>
+      </div>
+
+      <div id="hand" class="hand"></div>
+    </div>
+  </div>
+
+  <script src="spire.js"></script>
+</body>
+</html>
