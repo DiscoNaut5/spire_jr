@@ -40,6 +40,14 @@ const els = {
   enemyIntent: document.getElementById('enemyIntent'),
   fightCounter: document.getElementById('fightCounter'),
   deckCounter: document.getElementById('deckCounter'),
+  drawCounter: document.getElementById('drawCounter'),
+  discardCounter: document.getElementById('discardCounter'),
+  pileModal: document.getElementById('pileModal'),
+  pileModalBackdrop: document.getElementById('pileModalBackdrop'),
+  pileModalTitle: document.getElementById('pileModalTitle'),
+  pileModalMeta: document.getElementById('pileModalMeta'),
+  pileModalList: document.getElementById('pileModalList'),
+  pileModalClose: document.getElementById('pileModalClose'),
   hand: document.getElementById('hand'),
   endTurnBtn: document.getElementById('endTurnBtn')
 };
@@ -79,6 +87,12 @@ function randomFrom(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+function sleep(ms) {
+  return new Promise(resolve => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 function createInitialState() {
   return {
     runFight: 1,
@@ -92,6 +106,7 @@ function createInitialState() {
     drawPile: [],
     discardPile: [],
     hand: [],
+    turnLocked: false,
     gameOver: false,
     message: 'Play cards, then tap End Turn.'
   };
@@ -177,6 +192,7 @@ function spendEnergy(cost) {
 
 function applyAttack(amount) {
   state.enemy.hp = Math.max(0, state.enemy.hp - amount);
+  showHeroAttackJiggle();
   showAttackAnimation();
 }
 
@@ -192,10 +208,16 @@ function applyEnemyAttack() {
   const incomingDamage = state.enemy.nextIntent;
   const damageTaken = Math.max(0, incomingDamage - state.player.block);
 
+  if (incomingDamage > 0) {
+    showEnemyAttackJiggle();
+  }
+
   state.player.hp = Math.max(0, state.player.hp - damageTaken);
 
   if (damageTaken > 0) {
     showHeroHitAnimation();
+  } else if (incomingDamage > 0) {
+    showHeroBlockAnimation();
   }
 
   clearBlock();
@@ -236,8 +258,57 @@ function getStatusMessage() {
   return state.message;
 }
 
+function getCardSummary(card) {
+  return card.icon + ' ' + card.label;
+}
+
+function renderPileModalContent(title, cards, meta) {
+  els.pileModalTitle.textContent = title;
+  els.pileModalMeta.textContent = meta;
+  els.pileModalList.innerHTML = '';
+
+  if (cards.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'pile-modal-item empty';
+    empty.textContent = 'No cards here';
+    els.pileModalList.appendChild(empty);
+    return;
+  }
+
+  cards.forEach(card => {
+    const row = document.createElement('div');
+    row.className = 'pile-modal-item';
+    row.innerHTML =
+      '<span class="pile-item-name">' + getCardSummary(card) + '</span>' +
+      '<span class="pile-item-value">⚡' + card.cost + ' • ' + card.value + '</span>';
+    els.pileModalList.appendChild(row);
+  });
+}
+
+function openPileModal(pileType) {
+  if (pileType === 'deck') {
+    const deckCards = state.hand.concat(state.drawPile, state.discardPile);
+    const meta = 'Total ' + deckCards.length + ' cards • Draw ' + state.drawPile.length + ' • Discard ' + state.discardPile.length + ' • Hand ' + state.hand.length;
+    renderPileModalContent('Deck', deckCards, meta);
+  } else if (pileType === 'draw') {
+    const drawCards = state.drawPile.slice().reverse();
+    renderPileModalContent('Draw Pile', drawCards, 'Top card shown first • ' + drawCards.length + ' cards');
+  } else if (pileType === 'discard') {
+    const discardCards = state.discardPile.slice().reverse();
+    renderPileModalContent('Discard Pile', discardCards, 'Most recently discarded shown first • ' + discardCards.length + ' cards');
+  }
+
+  els.pileModal.classList.remove('hidden');
+  els.pileModal.setAttribute('aria-hidden', 'false');
+}
+
+function closePileModal() {
+  els.pileModal.classList.add('hidden');
+  els.pileModal.setAttribute('aria-hidden', 'true');
+}
+
 function playCard(cardUid) {
-  if (state.gameOver) {
+  if (state.gameOver || state.turnLocked) {
     return;
   }
 
@@ -262,6 +333,7 @@ function playCard(cardUid) {
     applyBlock(card.value);
     setMessage('Nice! You built ' + card.value + ' block.');
   } else if (card.type === 'heal') {
+    showHeroPotionAnimation();
     const hpBefore = state.player.hp;
     applyHeal(card.value);
     setMessage('Yum! You healed ' + (state.player.hp - hpBefore) + '.');
@@ -277,24 +349,34 @@ function playCard(cardUid) {
   render();
 }
 
-function endTurn() {
-  if (state.gameOver) {
+async function endTurn() {
+  if (state.gameOver || state.turnLocked) {
     return;
   }
 
-  const damageTaken = applyEnemyAttack();
+  state.turnLocked = true;
   moveHandToDiscard();
+  render();
+
+  await sleep(220);
+
+  const damageTaken = applyEnemyAttack();
+  render();
 
   if (state.player.hp <= 0) {
     state.gameOver = true;
+    state.turnLocked = false;
     setMessage('Oh no! The monster won. Refresh to try again.');
     render();
     return;
   }
 
+  await sleep(520);
+
   refillEnergy();
   queueNextEnemyIntent();
   drawCards(GAME_CONFIG.handSize);
+  state.turnLocked = false;
 
   if (damageTaken > 0) {
     setMessage('Ouch! The monster hit for ' + damageTaken + '.');
@@ -366,12 +448,109 @@ function showHeroHitAnimation() {
   }, 420);
 }
 
+function showHeroBlockAnimation() {
+  const shieldBurst = document.createElement('div');
+  shieldBurst.className = 'hero-shield-burst';
+
+  const ricochetSword = document.createElement('div');
+  ricochetSword.className = 'hero-blocked-sword';
+  ricochetSword.textContent = '🗡️';
+
+  els.heroArt.appendChild(shieldBurst);
+  els.heroArt.appendChild(ricochetSword);
+
+  window.setTimeout(() => {
+    if (shieldBurst.parentNode) {
+      shieldBurst.parentNode.removeChild(shieldBurst);
+    }
+
+    if (ricochetSword.parentNode) {
+      ricochetSword.parentNode.removeChild(ricochetSword);
+    }
+  }, 740);
+}
+
+function showHeroAttackJiggle() {
+  els.heroArt.classList.remove('hero-attack-jiggle');
+  void els.heroArt.offsetWidth;
+  els.heroArt.classList.add('hero-attack-jiggle');
+
+  window.setTimeout(() => {
+    els.heroArt.classList.remove('hero-attack-jiggle');
+  }, 340);
+}
+
+function showEnemyAttackJiggle() {
+  els.enemyArt.classList.remove('enemy-attack-jiggle');
+  void els.enemyArt.offsetWidth;
+  els.enemyArt.classList.add('enemy-attack-jiggle');
+
+  window.setTimeout(() => {
+    els.enemyArt.classList.remove('enemy-attack-jiggle');
+  }, 340);
+}
+
+function showHeroPotionAnimation() {
+  const potion = document.createElement('div');
+  potion.className = 'hero-potion-arc';
+  potion.textContent = '🧪';
+
+  const buttonRect = els.endTurnBtn.getBoundingClientRect();
+  const heroRect = els.heroArt.getBoundingClientRect();
+
+  const startX = buttonRect.right - 24;
+  const startY = buttonRect.bottom - 18;
+  const landX = heroRect.left + heroRect.width * 0.52;
+  const landY = heroRect.top + heroRect.height * 0.56;
+
+  potion.style.left = startX + 'px';
+  potion.style.top = startY + 'px';
+  document.body.appendChild(potion);
+
+  // Smooth quadratic arc from end-turn button to hero center.
+  const controlX = (startX + landX) * 0.5 + 84;
+  const controlY = Math.min(startY, landY) - 220;
+  const durationMs = 820;
+  const startTime = performance.now();
+
+  function tick(now) {
+    const t = Math.min(1, (now - startTime) / durationMs);
+    const u = 1 - t;
+
+    const x = u * u * startX + 2 * u * t * controlX + t * t * landX;
+    const y = u * u * startY + 2 * u * t * controlY + t * t * landY;
+
+    const dx = 2 * u * (controlX - startX) + 2 * t * (landX - controlX);
+    const dy = 2 * u * (controlY - startY) + 2 * t * (landY - controlY);
+    const tangentAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+    const spin = t * 420;
+    const scale = t < 0.62 ? 0.62 + t * 0.62 : 1.0 - (t - 0.62) * 0.7;
+    const opacity = t < 0.12 ? t / 0.12 : (t > 0.9 ? 1 - (t - 0.9) / 0.1 : 1);
+
+    potion.style.left = x + 'px';
+    potion.style.top = y + 'px';
+    potion.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+    potion.style.transform = 'translate(-50%, -50%) rotate(' + (tangentAngle + spin + 90) + 'deg) scale(' + scale + ')';
+
+    if (t < 1) {
+      window.requestAnimationFrame(tick);
+      return;
+    }
+
+    if (potion.parentNode) {
+      potion.parentNode.removeChild(potion);
+    }
+  }
+
+  window.requestAnimationFrame(tick);
+}
+
 function renderHand() {
   els.hand.innerHTML = '';
 
   state.hand.forEach(card => {
     const button = document.createElement('button');
-    const isDisabled = state.gameOver || state.energy < card.cost;
+    const isDisabled = state.gameOver || state.turnLocked || state.energy < card.cost;
 
     button.className = 'card';
     button.classList.add('card-type-' + card.type);
@@ -411,7 +590,9 @@ function renderMeta() {
   els.energyRow.textContent = getEnergyIcons();
   els.enemyIntent.textContent = '🗡️ ' + state.enemy.nextIntent;
   els.fightCounter.textContent = getFightLabel();
-  els.deckCounter.textContent = 'Deck ' + getDeckCount() + ' cards';
+  els.deckCounter.textContent = 'Deck ' + getDeckCount();
+  els.drawCounter.textContent = 'Draw ' + state.drawPile.length;
+  els.discardCounter.textContent = 'Discard ' + state.discardPile.length;
 
   if (state.enemy.artSrc) {
     els.enemyBaseImg.style.display = 'block';
@@ -422,7 +603,10 @@ function renderMeta() {
     els.enemyBase.style.display = 'block';
     els.enemyBase.textContent = state.enemy.art;
   }
-  els.endTurnBtn.disabled = state.gameOver;
+  const endTurnReady = !state.gameOver && state.energy <= 0;
+  els.endTurnBtn.disabled = state.gameOver || state.turnLocked;
+  els.endTurnBtn.classList.toggle('end-turn-ready', endTurnReady);
+  els.endTurnBtn.setAttribute('data-ready', endTurnReady ? 'true' : 'false');
 }
 
 function render() {
@@ -432,5 +616,15 @@ function render() {
 }
 
 els.endTurnBtn.addEventListener('click', endTurn);
+els.deckCounter.addEventListener('click', () => openPileModal('deck'));
+els.drawCounter.addEventListener('click', () => openPileModal('draw'));
+els.discardCounter.addEventListener('click', () => openPileModal('discard'));
+els.pileModalClose.addEventListener('click', closePileModal);
+els.pileModalBackdrop.addEventListener('click', closePileModal);
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    closePileModal();
+  }
+});
 
 resetState();

@@ -38,7 +38,7 @@
         <div>
           <div class="meta-row">
             <span>Bad Guy</span>
-            <span id="deckCounter">Deck 8 cards</span>
+            <span>Intent</span>
           </div>
 
           <div class="statline">
@@ -57,9 +57,26 @@
 
     <div class="panel">
       <div class="battle-row">
+        <div class="pile-column">
+          <button id="deckCounter" class="btn btn-secondary pile-btn">Deck 8</button>
+          <button id="drawCounter" class="btn btn-secondary pile-btn">Draw 8</button>
+          <button id="discardCounter" class="btn btn-secondary pile-btn">Discard 0</button>
+        </div>
         <div id="hand" class="hand"></div>
         <button id="endTurnBtn" class="btn btn-primary end-turn-side">End Turn</button>
       </div>
+    </div>
+  </div>
+
+  <div id="pileModal" class="pile-modal hidden" aria-hidden="true">
+    <div id="pileModalBackdrop" class="pile-modal-backdrop"></div>
+    <div class="pile-modal-card" role="dialog" aria-modal="true" aria-labelledby="pileModalTitle">
+      <div class="pile-modal-header">
+        <h2 id="pileModalTitle" class="pile-modal-title">Deck</h2>
+        <button id="pileModalClose" class="btn btn-secondary pile-modal-close" type="button">Close</button>
+      </div>
+      <div id="pileModalMeta" class="pile-modal-meta"></div>
+      <div id="pileModalList" class="pile-modal-list"></div>
     </div>
   </div>
 
