@@ -8,16 +8,16 @@ const GAME_CONFIG = {
   },
   startingDeckIds: ['atk2', 'atk2', 'atk3', 'atk3', 'blk2', 'blk2', 'blk3', 'heal3'],
   cardPool: [
-    { id: 'atk2', type: 'attack', value: 2, cost: 1, icon: '🗡️', label: 'Bonk' },
-    { id: 'atk3', type: 'attack', value: 3, cost: 1, icon: '🗡️', label: 'Big Bonk' },
-    { id: 'atk4', type: 'attack', value: 4, cost: 1, icon: '🗡️', label: 'Mega Bonk' },
+    { id: 'atk2', type: 'attack', value: 2, cost: 1, icon: '🗡️', label: 'Bonk', artSrc: 'assets/attack.png' },
+    { id: 'atk3', type: 'attack', value: 3, cost: 1, icon: '🗡️', label: 'Big Bonk', artSrc: 'assets/attack.png' },
+    { id: 'atk4', type: 'attack', value: 4, cost: 1, icon: '🗡️', label: 'Mega Bonk', artSrc: 'assets/attack.png' },
     { id: 'blk2', type: 'block', value: 2, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/hide.png' },
     { id: 'blk3', type: 'block', value: 3, cost: 1, icon: '🛡️', label: 'Big Defend', artSrc: 'assets/hide.png' },
     { id: 'blk4', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/hide.png' },
-    { id: 'heal3', type: 'heal', value: 3, cost: 1, icon: '💖', label: 'Snack Time', artSrc: 'assets/potion.png' }
+    { id: 'heal3', type: 'heal', value: 3, cost: 1, icon: '💖', label: 'Magic Potion', artSrc: 'assets/potion.png' }
   ],
   enemies: [
-    { name: '💀 Skull', art: '💀', maxHp: 14, intents: [2, 3, 4] },
+    { name: '🟢 Blob', artSrc: 'assets/broccoli.png', maxHp: 14, intents: [2, 3, 4] },
     { name: '🐍 Snake', art: '🐍', maxHp: 18, intents: [3, 4, 5] },
     { name: '🦀 Crab', art: '🦀', maxHp: 22, intents: [4, 5, 6] }
   ]
@@ -35,11 +35,11 @@ const els = {
   enemyHpText: document.getElementById('enemyHpText'),
   enemyHpFill: document.getElementById('enemyHpFill'),
   enemyArt: document.getElementById('enemyArt'),
+  enemyBaseImg: document.getElementById('enemyBaseImg'),
   enemyBase: document.getElementById('enemyBase'),
   enemyIntent: document.getElementById('enemyIntent'),
   fightCounter: document.getElementById('fightCounter'),
   deckCounter: document.getElementById('deckCounter'),
-  statusText: document.getElementById('statusText'),
   hand: document.getElementById('hand'),
   endTurnBtn: document.getElementById('endTurnBtn')
 };
@@ -119,6 +119,7 @@ function createEnemyForFight(fightNumber) {
   return {
     name: baseEnemy.name,
     art: baseEnemy.art,
+    artSrc: baseEnemy.artSrc,
     intents: baseEnemy.intents.slice(),
     maxHp: baseEnemy.maxHp + extraHp,
     hp: baseEnemy.maxHp + extraHp,
@@ -411,9 +412,16 @@ function renderMeta() {
   els.enemyIntent.textContent = '🗡️ ' + state.enemy.nextIntent;
   els.fightCounter.textContent = getFightLabel();
   els.deckCounter.textContent = 'Deck ' + getDeckCount() + ' cards';
-  els.statusText.textContent = getStatusMessage();
 
-  els.enemyBase.textContent = state.enemy.art;
+  if (state.enemy.artSrc) {
+    els.enemyBaseImg.style.display = 'block';
+    els.enemyBaseImg.src = state.enemy.artSrc;
+    els.enemyBase.style.display = 'none';
+  } else {
+    els.enemyBaseImg.style.display = 'none';
+    els.enemyBase.style.display = 'block';
+    els.enemyBase.textContent = state.enemy.art;
+  }
   els.endTurnBtn.disabled = state.gameOver;
 }
 

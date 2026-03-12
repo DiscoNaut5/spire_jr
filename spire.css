@@ -29,7 +29,7 @@ body {
   margin: 0 auto;
   padding: 12px;
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
   gap: 10px;
 }
 
@@ -156,6 +156,17 @@ body {
   transform: translateY(18px);
 }
 
+.enemy-base-img {
+  display: none;
+  position: relative;
+  z-index: 1;
+  width: min(220px, 90%);
+  max-height: 170px;
+  object-fit: contain;
+  transform: translateY(18px);
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
+}
+
 .hero-base-img {
   position: relative;
   z-index: 1;
@@ -188,25 +199,6 @@ body {
   animation: intentBounce 900ms ease-in-out infinite;
 }
 
-.controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.status-pill {
-  min-height: 24px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--muted);
-}
-
 .btn {
   appearance: none;
   border: 0;
@@ -236,6 +228,74 @@ body {
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.battle-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.end-turn-side {
+  position: relative;
+  overflow: hidden;
+  align-self: stretch;
+  min-width: 128px;
+  border: 1px solid rgba(255, 240, 190, 0.8);
+  background:
+    linear-gradient(165deg, #fff7c8 0%, #f7d568 24%, #e9b945 55%, #c78f20 100%);
+  color: #3b2600;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 0 20px rgba(255, 209, 102, 0.55),
+    0 0 38px rgba(255, 183, 56, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -2px 0 rgba(120, 72, 0, 0.35);
+  animation: endTurnGlow 1800ms ease-in-out infinite;
+}
+
+.end-turn-side::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -45%;
+  width: 36%;
+  pointer-events: none;
+  transform: skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 35%,
+    rgba(255, 255, 255, 0.52) 50%,
+    rgba(255, 255, 255, 0.06) 65%,
+    transparent 100%
+  );
+  animation: endTurnShimmer 2200ms linear infinite;
+}
+
+.end-turn-side::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 28%, rgba(255, 255, 255, 0.88) 0 1.6px, transparent 2.8px),
+    radial-gradient(circle at 78% 24%, rgba(255, 246, 208, 0.8) 0 1.4px, transparent 2.6px),
+    radial-gradient(circle at 35% 70%, rgba(255, 255, 255, 0.76) 0 1.2px, transparent 2.2px),
+    radial-gradient(circle at 70% 74%, rgba(255, 236, 176, 0.74) 0 1.3px, transparent 2.4px);
+  opacity: 0.35;
+  animation: endTurnSparkle 1350ms ease-in-out infinite alternate;
+}
+
+.end-turn-side:hover,
+.end-turn-side:focus-visible {
+  box-shadow:
+    0 0 24px rgba(255, 223, 132, 0.72),
+    0 0 48px rgba(255, 188, 64, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -2px 0 rgba(120, 72, 0, 0.42);
 }
 
 .hand {
@@ -533,6 +593,40 @@ body {
   }
 }
 
+@keyframes endTurnShimmer {
+  0% {
+    left: -45%;
+  }
+
+  100% {
+    left: 118%;
+  }
+}
+
+@keyframes endTurnSparkle {
+  0% {
+    opacity: 0.2;
+  }
+
+  100% {
+    opacity: 0.52;
+  }
+}
+
+@keyframes endTurnGlow {
+  0% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.08);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
 @media (max-width: 900px) {
   .wrap {
     padding: 8px;
@@ -569,6 +663,11 @@ body {
     transform: translateY(12px);
   }
 
+  .enemy-base-img {
+    transform: translateY(12px);
+    max-height: 146px;
+  }
+
   .enemy-intent {
     top: 6px;
   }
@@ -581,6 +680,16 @@ body {
   .hand {
     grid-template-columns: repeat(3, minmax(120px, 160px));
     gap: 10px;
+  }
+
+  .battle-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .end-turn-side {
+    justify-self: end;
+    min-width: 116px;
   }
 
   .card {
@@ -621,11 +730,17 @@ body {
   .enemy-intent {
     animation: none;
   }
+
+  .end-turn-side,
+  .end-turn-side::before,
+  .end-turn-side::after {
+    animation: none;
+  }
 }
 
 @media (max-width: 640px) {
   .wrap {
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto 1fr;
   }
 
   .arena {
@@ -634,6 +749,11 @@ body {
 
   .hand {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .end-turn-side {
+    width: 100%;
+    justify-self: stretch;
   }
 
   .card {

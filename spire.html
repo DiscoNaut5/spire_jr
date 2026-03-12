@@ -8,9 +8,6 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">Slay the Spire Jr.</div>
-    <div class="subtitle">Simple attacks, blocks, and big buttons.</div>
-
     <div class="arena">
       <div class="panel player-panel">
         <div>
@@ -50,6 +47,7 @@
           </div>
           <div class="hpbar"><div id="enemyHpFill" class="fill enemy"></div></div>
           <div class="enemy-art" id="enemyArt">
+            <img id="enemyBaseImg" class="enemy-base-img" src="" alt="Enemy" />
             <span id="enemyBase" class="enemy-base">🟢</span>
             <div class="intent enemy-intent" id="enemyIntent">🗡️ 2</div>
           </div>
@@ -58,12 +56,10 @@
     </div>
 
     <div class="panel">
-      <div class="controls">
-        <div id="statusText" class="status-pill">Play cards, then tap End Turn.</div>
-        <button id="endTurnBtn" class="btn btn-primary">End Turn</button>
+      <div class="battle-row">
+        <div id="hand" class="hand"></div>
+        <button id="endTurnBtn" class="btn btn-primary end-turn-side">End Turn</button>
       </div>
-
-      <div id="hand" class="hand"></div>
     </div>
   </div>
 
