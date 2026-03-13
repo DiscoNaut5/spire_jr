@@ -642,7 +642,7 @@ body {
 
 .reward-choice-picked {
   pointer-events: none;
-  animation: rewardCardPickedAway 620ms cubic-bezier(0.2, 0.75, 0.2, 1) forwards;
+  animation: rewardCardPickedAway 1680ms cubic-bezier(0.2, 0.75, 0.2, 1) forwards;
 }
 
 .reward-choice-fade {
@@ -908,13 +908,13 @@ body {
 
 @keyframes rewardCardPickedAway {
   0% {
-    transform: translateY(0) rotate(0deg) scale(1);
+    transform: translateY(-25%) rotate(0deg) scale(1);
     opacity: 1;
     filter: blur(0);
   }
 
   100% {
-    transform: translateY(-190px) rotate(540deg) scale(0.18);
+    transform: translateY(calc(-190px - 25%)) rotate(1260deg) scale(0.18);
     opacity: 0;
     filter: blur(1px);
   }
