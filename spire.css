@@ -258,8 +258,8 @@ body {
   animation: enemyFallThroughHole 920ms cubic-bezier(0.18, 0.78, 0.22, 1) forwards;
 }
 
-.enemy-art.enemy-defeat-fall .enemy-intent {
-  opacity: 0;
+.enemy-art {
+  --enemy-idle-base-y: 2px;
 }
 
 .combatant-name-stage {
@@ -308,7 +308,7 @@ body {
   z-index: 1;
   display: block;
   line-height: 1;
-  transform: translate(var(--enemy-center-offset, 0px), 2px);
+  animation: enemyIdleBounce 900ms ease-in-out infinite;
 }
 
 .enemy-base-img {
@@ -318,7 +318,7 @@ body {
   width: min(220px, 90%);
   max-height: 170px;
   object-fit: contain;
-  transform: translate(var(--enemy-center-offset, 0px), 2px);
+  animation: enemyIdleBounce 900ms ease-in-out infinite;
   filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
 }
 
@@ -470,33 +470,6 @@ body {
   animation: blockCountDisintegrate 420ms cubic-bezier(0.16, 0.78, 0.24, 1) forwards;
 }
 
-.intent {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: fit-content;
-  padding: 8px 12px;
-  border-radius: 18px;
-  background: transparent;
-  font-size: 38px;
-  font-weight: 900;
-}
-
-.enemy-intent {
-  position: absolute;
-  left: 50%;
-  top: -8px;
-  z-index: 12;
-  padding: 6px 10px;
-  border-radius: 16px;
-  background: rgba(10, 16, 28, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
-  transform: translate(calc(-50% + var(--enemy-center-offset, 0px)), 0);
-  pointer-events: none;
-  animation: intentBounce 900ms ease-in-out infinite;
-}
 
 .btn {
   appearance: none;
@@ -1920,26 +1893,18 @@ body {
   }
 }
 
-@keyframes intentBounce {
+@keyframes enemyIdleBounce {
   0% {
-    transform: translate(calc(-50% + var(--enemy-center-offset, 0px)), 0);
+    transform: translate(var(--enemy-center-offset, 0px), var(--enemy-idle-base-y));
   }
 
   50% {
-    transform: translate(calc(-50% + var(--enemy-center-offset, 0px)), -12px);
+    transform: translate(var(--enemy-center-offset, 0px), calc(var(--enemy-idle-base-y) - 12px));
   }
 
   100% {
-    transform: translate(calc(-50% + var(--enemy-center-offset, 0px)), 0);
+    transform: translate(var(--enemy-center-offset, 0px), var(--enemy-idle-base-y));
   }
-}
-
-.enemy-intent-fire {
-  font-size: 54px;
-  letter-spacing: -2px;
-  text-shadow:
-    0 0 10px rgba(255, 123, 56, 0.75),
-    0 0 18px rgba(255, 88, 44, 0.45);
 }
 
 @keyframes endTurnShimmer {
@@ -2159,20 +2124,16 @@ body {
   }
 
   .enemy-base {
-    transform: translate(var(--enemy-center-offset, 0px), 0);
+    --enemy-idle-base-y: 0px;
   }
 
   .enemy-base-img {
-    transform: translate(var(--enemy-center-offset, 0px), 0);
+    --enemy-idle-base-y: 0px;
     max-height: 146px;
   }
 
   .hero-base-img {
     transform: translateY(var(--hero-art-lift));
-  }
-
-  .enemy-intent {
-    top: -6px;
   }
 
   .combatant-name-stage {
@@ -2312,10 +2273,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .enemy-intent {
-    animation: none;
-  }
-
   .end-turn-side,
   .end-turn-side::before,
   .end-turn-side::after {

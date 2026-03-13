@@ -1,5 +1,4 @@
 const GAME_CONFIG = {
-  maxFights: 3,
   maxEnergy: 3,
   handSize: 5,
   debugEnemyHpOverride: null,
@@ -62,7 +61,6 @@ const els = {
   enemyArt: document.getElementById('enemyArt'),
   enemyBaseImg: document.getElementById('enemyBaseImg'),
   enemyBase: document.getElementById('enemyBase'),
-  enemyIntent: document.getElementById('enemyIntent'),
   enemyDamageIcons: document.getElementById('enemyDamageIcons'),
   fightCounter: document.getElementById('fightCounter'),
   deckCounter: document.getElementById('deckCounter'),
@@ -661,18 +659,6 @@ function getEnergyIcons() {
   }
 
   return icons || '—';
-}
-
-function getStatusMessage() {
-  if (state.gameOver && state.player.hp <= 0) {
-    return 'Oh no! The monster won. Refresh to try again.';
-  }
-
-  if (state.gameOver && state.player.hp > 0) {
-    return 'You won the whole adventure. Nice job!';
-  }
-
-  return state.message;
 }
 
 function isFinalFight() {
@@ -1381,8 +1367,6 @@ function renderMeta() {
     els.enemyNameStage.textContent = state.enemy.name;
   }
   els.energyRow.textContent = getEnergyIcons();
-  els.enemyIntent.textContent = '🗡️ ' + state.enemy.nextIntent;
-  els.enemyIntent.classList.remove('enemy-intent-fire');
   els.fightCounter.textContent = getFightLabel();
   els.deckCounter.textContent = 'Deck ' + getDeckCount();
   els.drawCounter.textContent = 'Draw ' + state.drawPile.length;
