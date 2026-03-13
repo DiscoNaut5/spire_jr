@@ -30,14 +30,14 @@ const GAME_CONFIG = {
     { id: 'heal2', type: 'heal', value: 5, cost: 1, icon: '💖', label: 'Magic Potion', artSrc: 'assets/super_potion.png' }
   ],
   enemies: [
-    { name: 'Bats!', artSrc: 'assets/bats.png', maxHp: 7, intents: [1, 2, 2] },
-    { name: 'Birds!', artSrc: 'assets/birds.png', maxHp: 8, intents: [1, 2, 2] },
-    { name: 'Leech', artSrc: 'assets/leech.png', maxHp: 9, intents: [1, 2, 2] },
-    { name: 'Evil Snail', artSrc: 'assets/snail.png', maxHp: 10, intents: [1, 2, 2] },
-    { name: 'Evil Tardigrade', artSrc: 'assets/tardigrade.png', maxHp: 14, intents: [1, 2, 3] },
-    { name: '🐉 Dragon', artSrc: 'assets/dragon.png', maxHp: 18, intents: [3, 3, 4], attackFx: '🔥🔥🔥' },
-    { name: 'Broccoli Rob', artSrc: 'assets/broccoli.png', maxHp: 20, intents: [4, 4, 5] },
-    { name: 'dogs', artSrc: 'assets/dogs.png', maxHp: 24, intents: [3, 8, 9] },
+    { name: 'Bats!', artSrc: 'assets/bats.png', maxHp: 7, intents: [1, 2, 2], battlefieldId: 'dungeon' },
+    { name: 'Birds!', artSrc: 'assets/birds.png', maxHp: 8, intents: [1, 2, 2], battlefieldId: 'beach-castle' },
+    { name: 'Leech', artSrc: 'assets/leech.png', maxHp: 9, intents: [1, 2, 2], battlefieldId: 'mars' },
+    { name: 'Evil Snail', artSrc: 'assets/snail.png', maxHp: 10, intents: [1, 2, 2], battlefieldId: 'mars' },
+    { name: 'Evil Tardigrade', artSrc: 'assets/tardigrade.png', maxHp: 14, intents: [1, 2, 3], battlefieldId: 'mars' },
+    { name: '🐉 Dragon', artSrc: 'assets/dragon.png', maxHp: 18, intents: [3, 3, 4], attackFx: '🔥🔥🔥', battlefieldId: 'disney-castle' },
+    { name: 'Broccoli Rob', artSrc: 'assets/broccoli.png', maxHp: 20, intents: [4, 4, 5], battlefieldId: 'enchanted-forest' },
+    { name: 'dogs', artSrc: 'assets/dogs.png', maxHp: 24, intents: [3, 8, 9], battlefieldId: 'haunted-mansion' },
   ]
 };
 
@@ -173,6 +173,7 @@ function createEnemyForFight(fightNumber) {
     artSrc: baseEnemy.artSrc,
     attackFx: baseEnemy.attackFx || '🗡️',
     intents: baseEnemy.intents.slice(),
+    battlefieldId: baseEnemy.battlefieldId || null,
     maxHp,
     hp: maxHp,
     nextIntent: randomFrom(baseEnemy.intents)
@@ -388,6 +389,15 @@ function pickBattlefield() {
   return randomFrom(GAME_CONFIG.battlefields);
 }
 
+function getBattlefieldForEnemy(enemy) {
+  if (!enemy || !enemy.battlefieldId) {
+    return pickBattlefield();
+  }
+
+  const mapped = GAME_CONFIG.battlefields.find(battlefield => battlefield.id === enemy.battlefieldId);
+  return mapped || pickBattlefield();
+}
+
 function getDeckCount() {
   return state.drawPile.length + state.discardPile.length + state.hand.length;
 }
@@ -540,6 +550,9 @@ async function playCard(cardUid, cardElement) {
   state.discardPile.push(card);
 
   if (state.enemy.hp <= 0) {
+    state.turnLocked = true;
+    await showEnemyDefeatAnimation();
+    state.turnLocked = false;
     handleFightWin();
     return;
   }
@@ -651,7 +664,7 @@ function startFight() {
   state.rewardOptions = [];
   state.hand = [];
   state.enemy = createEnemyForFight(state.runFight);
-  state.battlefield = pickBattlefield();
+  state.battlefield = getBattlefieldForEnemy(state.enemy);
   drawCards(GAME_CONFIG.handSize);
   render();
 }
@@ -676,6 +689,38 @@ function showAttackAnimation() {
 
       resolve();
     }, 520);
+  });
+}
+
+function showEnemyDefeatAnimation() {
+  if (!els.enemyArt || !els.fightStage) {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    const hole = document.createElement('div');
+    hole.className = 'enemy-drop-hole';
+
+    const enemyRect = els.enemyArt.getBoundingClientRect();
+    const stageRect = els.fightStage.getBoundingClientRect();
+    const holeLeft = enemyRect.left - stageRect.left + enemyRect.width * 0.5;
+
+    hole.style.left = holeLeft + 'px';
+    els.fightStage.appendChild(hole);
+
+    els.enemyArt.classList.remove('enemy-defeat-fall');
+    void els.enemyArt.offsetWidth;
+    els.enemyArt.classList.add('enemy-defeat-fall');
+
+    window.setTimeout(() => {
+      els.enemyArt.classList.remove('enemy-defeat-fall');
+
+      if (hole.parentNode) {
+        hole.parentNode.removeChild(hole);
+      }
+
+      resolve();
+    }, 1240);
   });
 }
 
