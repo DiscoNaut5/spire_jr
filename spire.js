@@ -298,6 +298,57 @@ function clearBlock() {
   state.player.block = 0;
 }
 
+async function showRemainingBlockFadeOut() {
+  if (state.player.block <= 0) {
+    return;
+  }
+
+  await sleep(600);
+
+  let disintegrateDuration = 560;
+  let staggerTail = 0;
+
+  if (els.heroBlockIcons) {
+    const icons = Array.from(els.heroBlockIcons.querySelectorAll('.hero-block-icon'));
+    const staggerStepMs = 30;
+    staggerTail = Math.max(0, icons.length - 1) * staggerStepMs;
+    disintegrateDuration += Math.min(240, staggerTail);
+
+    els.heroBlockIcons.classList.remove('block-disintegrating');
+    void els.heroBlockIcons.offsetWidth;
+    els.heroBlockIcons.classList.add('block-disintegrating');
+
+    icons.forEach((icon, index) => {
+      const driftX = Math.round((Math.random() - 0.5) * 180);
+      const driftY = -Math.round(54 + Math.random() * 78);
+      const rotate = Math.round((Math.random() - 0.5) * 260);
+      icon.style.setProperty('--block-drift-x', driftX + 'px');
+      icon.style.setProperty('--block-drift-y', driftY + 'px');
+      icon.style.setProperty('--block-rot', rotate + 'deg');
+      icon.style.animationDelay = String(index * staggerStepMs) + 'ms';
+      icon.classList.add('block-icon-disintegrate');
+    });
+  }
+
+  if (els.playerBlockFill) {
+    els.playerBlockFill.classList.remove('block-disintegrating');
+    void els.playerBlockFill.offsetWidth;
+    els.playerBlockFill.classList.add('block-disintegrating');
+  }
+
+  await sleep(disintegrateDuration);
+  clearBlock();
+  render();
+
+  if (els.heroBlockIcons) {
+    els.heroBlockIcons.classList.remove('block-disintegrating');
+  }
+
+  if (els.playerBlockFill) {
+    els.playerBlockFill.classList.remove('block-disintegrating');
+  }
+}
+
 function moveHandToDiscard() {
   state.discardPile.push(...state.hand);
   state.hand = [];
@@ -565,7 +616,7 @@ async function applyEnemyAttack() {
     await sleep(90);
   }
 
-  clearBlock();
+  await showRemainingBlockFadeOut();
   return damageTaken;
 }
 
