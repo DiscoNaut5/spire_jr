@@ -33,7 +33,7 @@ body {
   margin: 0 auto;
   padding: 12px;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: minmax(300px, 1fr) auto;
   gap: 10px;
 }
 
@@ -64,6 +64,7 @@ body {
 
 .arena {
   display: block;
+  min-height: 0;
 }
 
 .arena-panel {
@@ -80,13 +81,11 @@ body {
   background-size: 100% auto, auto, auto;
   background-repeat: no-repeat, no-repeat, no-repeat;
   background-position: var(--fight-bg-position), center center, center center;
+  min-height: 0;
 }
 
 .arena-hud {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
+  display: none;
 }
 
 .combatant {
@@ -105,8 +104,12 @@ body {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: end;
   gap: 14px;
-  min-height: 210px;
+  min-height: clamp(280px, 54vh, 620px);
   padding: 10px 10px 0;
+}
+
+.wrap > .panel:last-child {
+  align-self: start;
 }
 
 .fight-stage::after {
@@ -134,11 +137,7 @@ body {
 }
 
 .meter-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  display: none;
 }
 
 .meter-row .hpbar {
@@ -164,6 +163,7 @@ body {
   font-size: 14px;
   color: var(--muted);
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+  display: none;
 }
 
 .big-number {
@@ -228,16 +228,22 @@ body {
 
 .hero-art,
 .enemy-art {
+  --art-floor-offset: 56px;
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   width: 100%;
   min-height: 90px;
+  padding-bottom: var(--art-floor-offset);
   font-size: clamp(72px, 10vw, 140px);
   line-height: 1;
   user-select: none;
   z-index: 2;
+}
+
+.hero-art {
+  --hero-art-lift: -8px;
 }
 
 .enemy-art.enemy-defeat-fall {
@@ -246,6 +252,30 @@ body {
 
 .enemy-art.enemy-defeat-fall .enemy-intent {
   opacity: 0;
+}
+
+.combatant-name-stage {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  z-index: 13;
+  transform: translateX(-50%);
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #fff8f0;
+  white-space: nowrap;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.66);
+  background: rgba(8, 14, 24, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+
+.enemy-name-stage {
+  transform: translateX(calc(-50% + var(--enemy-center-offset, 0px)));
 }
 
 .enemy-drop-hole {
@@ -270,7 +300,7 @@ body {
   z-index: 1;
   display: block;
   line-height: 1;
-  transform: translateY(12px);
+  transform: translate(var(--enemy-center-offset, 0px), 2px);
 }
 
 .enemy-base-img {
@@ -280,7 +310,7 @@ body {
   width: min(220px, 90%);
   max-height: 170px;
   object-fit: contain;
-  transform: translateY(12px);
+  transform: translate(var(--enemy-center-offset, 0px), 2px);
   filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
 }
 
@@ -290,7 +320,129 @@ body {
   width: min(220px, 90%);
   max-height: 150px;
   object-fit: contain;
+  transform: translateY(var(--hero-art-lift));
   filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
+}
+
+.hero-block-icons {
+  position: absolute;
+  left: 38%;
+  bottom: 10px;
+  z-index: 10;
+  transform: translateX(0);
+  display: grid;
+  grid-template-columns: repeat(2, 38px);
+  grid-template-rows: repeat(5, 38px);
+  gap: 6px 8px;
+  width: 98px;
+  min-height: 214px;
+  pointer-events: none;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(8, 14, 24, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(2px);
+}
+
+.enemy-damage-icons {
+  position: absolute;
+  left: 56%;
+  bottom: 10px;
+  z-index: 10;
+  transform: translateX(0);
+  display: grid;
+  grid-template-columns: repeat(2, 38px);
+  grid-template-rows: repeat(5, 38px);
+  gap: 6px 8px;
+  width: 98px;
+  min-height: 214px;
+  pointer-events: none;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(8, 14, 24, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(2px);
+}
+
+.hero-block-icon {
+  display: block;
+  width: 38px;
+  height: 38px;
+  font-size: 38px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.62));
+}
+
+.enemy-damage-icon {
+  display: block;
+  width: 38px;
+  height: 38px;
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.62));
+}
+
+.combat-hp-icons {
+  position: absolute;
+  bottom: 10px;
+  z-index: 10;
+  display: grid;
+  grid-template-rows: repeat(5, 38px);
+  grid-auto-flow: column;
+  grid-auto-columns: 38px;
+  justify-content: center;
+  align-content: start;
+  gap: 6px 8px;
+  width: 190px;
+  min-height: 214px;
+  pointer-events: none;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(8, 14, 24, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(2px);
+}
+
+.hero-hp-icons {
+  left: 6px;
+}
+
+.enemy-hp-icons {
+  right: 6px;
+}
+
+.combat-hp-icon {
+  display: block;
+  width: 38px;
+  height: 38px;
+  font-size: 38px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.62));
+}
+
+.hero-block-icons::before,
+.enemy-damage-icons::before,
+.combat-hp-icons::before {
+  content: attr(data-count);
+  position: absolute;
+  left: 50%;
+  top: -34px;
+  transform: translateX(-50%);
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff7f7;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: rgba(8, 14, 24, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.66),
+    0 0 12px rgba(0, 0, 0, 0.24);
+  pointer-events: none;
 }
 
 .intent {
@@ -316,7 +468,7 @@ body {
   background: rgba(10, 16, 28, 0.62);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
-  transform: translate(-50%, 0);
+  transform: translate(calc(-50% + var(--enemy-center-offset, 0px)), 0);
   pointer-events: none;
   animation: intentBounce 900ms ease-in-out infinite;
 }
@@ -584,6 +736,60 @@ body {
   .card-media {
     width: clamp(78px, 82%, 118px);
     height: clamp(84px, 56%, 122px);
+  }
+
+  .hero-block-icons,
+  .enemy-damage-icons {
+    grid-template-columns: repeat(2, 32px);
+    grid-template-rows: repeat(5, 32px);
+    gap: 5px 6px;
+    width: 82px;
+    min-height: 188px;
+  }
+
+  .hero-block-icons {
+    left: 36%;
+  }
+
+  .enemy-damage-icons {
+    left: 54%;
+  }
+
+  .combat-hp-icons {
+    grid-template-rows: repeat(5, 32px);
+    grid-auto-columns: 32px;
+    gap: 5px 6px;
+    width: 158px;
+    min-height: 188px;
+  }
+
+  .hero-hp-icons {
+    left: 2px;
+  }
+
+  .enemy-hp-icons {
+    right: 2px;
+  }
+
+  .hero-block-icon,
+  .combat-hp-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 32px;
+  }
+
+  .enemy-damage-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 28px;
+  }
+
+  .hero-block-icons::before,
+  .enemy-damage-icons::before,
+  .combat-hp-icons::before {
+    top: -31px;
+    font-size: 27px;
+    padding: 2px 9px;
   }
 }
 
@@ -1194,7 +1400,7 @@ body {
 
 .sword-swing {
   position: absolute;
-  left: 50%;
+  left: calc(50% + var(--enemy-center-offset, 0px));
   top: 50%;
   z-index: 8;
   font-size: 110px;
@@ -1235,6 +1441,10 @@ body {
 }
 
 .enemy-attack-jiggle {
+  animation: enemyAttackJiggle 320ms ease;
+}
+
+.enemy-hit-jiggle {
   animation: enemyAttackJiggle 320ms ease;
 }
 
@@ -1289,12 +1499,12 @@ body {
 .hero-body-gleam {
   position: absolute;
   left: 50%;
-  bottom: 0;
+  bottom: var(--art-floor-offset);
   z-index: 14;
   width: min(220px, 90%);
   height: min(150px, 100%);
   pointer-events: none;
-  transform: translateX(-50%);
+  transform: translate(-50%, var(--hero-art-lift));
   opacity: 1;
   overflow: hidden;
   -webkit-mask-image: url("assets/hero.png");
@@ -1679,15 +1889,15 @@ body {
 
 @keyframes intentBounce {
   0% {
-    transform: translate(-50%, 0);
+    transform: translate(calc(-50% + var(--enemy-center-offset, 0px)), 0);
   }
 
   50% {
-    transform: translate(-50%, -12px);
+    transform: translate(calc(-50% + var(--enemy-center-offset, 0px)), -12px);
   }
 
   100% {
-    transform: translate(-50%, 0);
+    transform: translate(calc(-50% + var(--enemy-center-offset, 0px)), 0);
   }
 }
 
@@ -1837,21 +2047,91 @@ body {
 
   .hero-art,
   .enemy-art {
+    --art-floor-offset: 44px;
     min-height: 72px;
+    padding-bottom: var(--art-floor-offset);
     font-size: clamp(60px, 14vw, 100px);
   }
 
+  .hero-art {
+    --hero-art-lift: -6px;
+  }
+
   .enemy-base {
-    transform: translateY(8px);
+    transform: translate(var(--enemy-center-offset, 0px), 0);
   }
 
   .enemy-base-img {
-    transform: translateY(8px);
+    transform: translate(var(--enemy-center-offset, 0px), 0);
     max-height: 146px;
+  }
+
+  .hero-base-img {
+    transform: translateY(var(--hero-art-lift));
   }
 
   .enemy-intent {
     top: -6px;
+  }
+
+  .combatant-name-stage {
+    bottom: 6px;
+    font-size: 18px;
+    padding: 4px 10px;
+  }
+
+  .hero-block-icons,
+  .enemy-damage-icons {
+    grid-template-columns: repeat(2, 30px);
+    grid-template-rows: repeat(5, 30px);
+    gap: 5px 6px;
+    width: 78px;
+    min-height: 182px;
+  }
+
+  .hero-block-icons {
+    left: 37%;
+  }
+
+  .enemy-damage-icons {
+    left: 54%;
+  }
+
+  .combat-hp-icons {
+    grid-template-rows: repeat(5, 30px);
+    grid-auto-columns: 30px;
+    gap: 5px 6px;
+    width: 150px;
+    min-height: 182px;
+  }
+
+  .hero-hp-icons {
+    left: 2px;
+  }
+
+  .enemy-hp-icons {
+    right: 2px;
+  }
+
+  .hero-block-icon,
+  .combat-hp-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
+  }
+
+  .enemy-damage-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 27px;
+  }
+
+  .hero-block-icons::before,
+  .enemy-damage-icons::before,
+  .combat-hp-icons::before {
+    top: -30px;
+    font-size: 26px;
+    padding: 2px 9px;
   }
 
   .intent {
@@ -1950,7 +2230,7 @@ body {
 
 @media (max-width: 640px) {
   .wrap {
-    grid-template-rows: auto 1fr;
+    grid-template-rows: minmax(240px, 1fr) auto;
   }
 
   .arena-hud {
@@ -1993,5 +2273,54 @@ body {
 
   .card {
     min-height: 198px;
+  }
+
+  .hero-block-icons,
+  .enemy-damage-icons {
+    left: auto;
+    grid-template-columns: repeat(2, 26px);
+    grid-template-rows: repeat(5, 26px);
+    gap: 4px 5px;
+    width: 69px;
+    min-height: 154px;
+    padding: 5px;
+  }
+
+  .hero-block-icons {
+    left: 35%;
+  }
+
+  .enemy-damage-icons {
+    left: 53%;
+  }
+
+  .combat-hp-icons {
+    grid-template-rows: repeat(5, 26px);
+    grid-auto-columns: 26px;
+    gap: 4px 5px;
+    width: 132px;
+    min-height: 154px;
+    padding: 5px;
+  }
+
+  .hero-block-icon,
+  .combat-hp-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 26px;
+  }
+
+  .enemy-damage-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 23px;
+  }
+
+  .hero-block-icons::before,
+  .enemy-damage-icons::before,
+  .combat-hp-icons::before {
+    top: -26px;
+    font-size: 22px;
+    padding: 1px 8px;
   }
 }

@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/app_icon.png" />
   <link rel="apple-touch-icon" sizes="167x167" href="assets/app_icon.png" />
   <link rel="apple-touch-icon" sizes="152x152" href="assets/app_icon.png" />
-  <link rel="stylesheet" href="spire.css?v=20260313ce" />
+  <link rel="stylesheet" href="spire.css?v=20260313dt" />
 </head>
 <body>
   <div class="wrap">
@@ -52,12 +52,20 @@
         </div>
 
         <div id="fightStage" class="fight-stage">
-          <div class="hero-art" id="heroArt"><img id="heroBase" class="hero-base-img" src="assets/hero.png" alt="Hero" /></div>
+          <div id="heroHpIcons" class="combat-hp-icons hero-hp-icons" aria-hidden="true"></div>
+          <div class="hero-art" id="heroArt">
+            <img id="heroBase" class="hero-base-img" src="assets/hero.png" alt="Hero" />
+            <div id="heroNameStage" class="combatant-name-stage hero-name-stage">The Hero!</div>
+          </div>
           <div class="enemy-art" id="enemyArt">
             <img id="enemyBaseImg" class="enemy-base-img" src="" alt="Enemy" />
             <span id="enemyBase" class="enemy-base">🟢</span>
             <div class="intent enemy-intent" id="enemyIntent">🗡️ 2</div>
+            <div id="enemyNameStage" class="combatant-name-stage enemy-name-stage">Enemy</div>
           </div>
+          <div id="heroBlockIcons" class="hero-block-icons" aria-hidden="true"></div>
+          <div id="enemyDamageIcons" class="enemy-damage-icons" aria-hidden="true"></div>
+          <div id="enemyHpIcons" class="combat-hp-icons enemy-hp-icons" aria-hidden="true"></div>
         </div>
       </div>
     </div>
@@ -129,6 +137,6 @@
     </div>
   </div>
 
-  <script src="spire.js?v=20260313ce"></script>
+  <script src="spire.js?v=20260313dt"></script>
 </body>
 </html>

@@ -37,25 +37,30 @@ const GAME_CONFIG = {
     { name: 'Evil Tardigrade', artSrc: 'assets/tardigrade.png', maxHp: 14, intents: [1, 2, 3], battlefieldId: 'mars' },
     { name: '🐉 Dragon', artSrc: 'assets/dragon.png', maxHp: 18, intents: [3, 3, 4], attackFx: '🔥🔥🔥', battlefieldId: 'disney-castle' },
     { name: 'Broccoli Rob', artSrc: 'assets/broccoli.png', maxHp: 20, intents: [4, 4, 5], battlefieldId: 'enchanted-forest' },
-    { name: 'dogs', artSrc: 'assets/dogs.png', maxHp: 24, intents: [3, 8, 9], battlefieldId: 'haunted-mansion' },
+    { name: 'Dogs!', artSrc: 'assets/dogs.png', maxHp: 24, intents: [3, 8, 9], battlefieldId: 'haunted-mansion' },
   ]
 };
 
 const els = {
   playerHpText: document.getElementById('playerHpText'),
   playerHpFill: document.getElementById('playerHpFill'),
+  heroHpIcons: document.getElementById('heroHpIcons'),
   playerBlockText: document.getElementById('playerBlockText'),
   playerBlockFill: document.getElementById('playerBlockFill'),
+  heroBlockIcons: document.getElementById('heroBlockIcons'),
   energyRow: document.getElementById('energyRow'),
   heroArt: document.getElementById('heroArt'),
   heroBase: document.getElementById('heroBase'),
   enemyName: document.getElementById('enemyName'),
+  enemyNameStage: document.getElementById('enemyNameStage'),
   enemyHpText: document.getElementById('enemyHpText'),
   enemyHpFill: document.getElementById('enemyHpFill'),
+  enemyHpIcons: document.getElementById('enemyHpIcons'),
   enemyArt: document.getElementById('enemyArt'),
   enemyBaseImg: document.getElementById('enemyBaseImg'),
   enemyBase: document.getElementById('enemyBase'),
   enemyIntent: document.getElementById('enemyIntent'),
+  enemyDamageIcons: document.getElementById('enemyDamageIcons'),
   fightCounter: document.getElementById('fightCounter'),
   deckCounter: document.getElementById('deckCounter'),
   drawCounter: document.getElementById('drawCounter'),
@@ -82,6 +87,10 @@ const els = {
 };
 
 let nextUid = 1;
+let enemyColumnCenterRaf = 0;
+let heroAttackJiggleTimeout = 0;
+let enemyAttackJiggleTimeout = 0;
+let enemyHitJiggleTimeout = 0;
 
 function makeUid() {
   return 'card-' + nextUid++;
@@ -119,6 +128,99 @@ function randomFrom(items) {
 function sleep(ms) {
   return new Promise(resolve => {
     window.setTimeout(resolve, ms);
+  });
+}
+
+function centerEnemyBetweenColumns() {
+  if (!els.enemyArt || !els.enemyDamageIcons || !els.enemyHpIcons) {
+    return;
+  }
+
+  if (
+    els.enemyArt.classList.contains('enemy-attack-jiggle') ||
+    els.enemyArt.classList.contains('enemy-hit-jiggle') ||
+    els.enemyArt.classList.contains('enemy-hit') ||
+    els.enemyArt.classList.contains('enemy-defeat-fall')
+  ) {
+    return;
+  }
+
+  const enemyVisual = els.enemyBaseImg && els.enemyBaseImg.style.display !== 'none'
+    ? els.enemyBaseImg
+    : els.enemyBase;
+  const enemyRect = enemyVisual.getBoundingClientRect();
+  const swordRect = els.enemyDamageIcons.getBoundingClientRect();
+  const heartRect = els.enemyHpIcons.getBoundingClientRect();
+
+  if (!enemyRect.width || !swordRect.width || !heartRect.width) {
+    return;
+  }
+
+  const enemyCenterX = (enemyRect.left + enemyRect.right) * 0.5;
+  const swordCenterX = (swordRect.left + swordRect.right) * 0.5;
+  const heartCenterX = (heartRect.left + heartRect.right) * 0.5;
+  const leftColumn = swordCenterX <= heartCenterX ? swordRect : heartRect;
+  const rightColumn = swordCenterX <= heartCenterX ? heartRect : swordRect;
+  const hasGap = rightColumn.left > leftColumn.right;
+  const targetCenterX = hasGap
+    ? (leftColumn.right + rightColumn.left) * 0.5
+    : (swordCenterX + heartCenterX) * 0.5;
+  const deltaX = targetCenterX - enemyCenterX;
+  const currentOffsetPx = Number.parseFloat(window.getComputedStyle(els.enemyArt).getPropertyValue('--enemy-center-offset')) || 0;
+  const nextOffsetPx = currentOffsetPx + deltaX;
+
+  if (Math.abs(nextOffsetPx - currentOffsetPx) < 0.5) {
+    return;
+  }
+
+  els.enemyArt.style.setProperty('--enemy-center-offset', Math.round(nextOffsetPx) + 'px');
+}
+
+function scheduleEnemyColumnCentering() {
+  if (enemyColumnCenterRaf) {
+    window.cancelAnimationFrame(enemyColumnCenterRaf);
+  }
+
+  enemyColumnCenterRaf = window.requestAnimationFrame(() => {
+    enemyColumnCenterRaf = 0;
+    centerEnemyBetweenColumns();
+  });
+}
+
+function waitForNextPaint() {
+  return new Promise(resolve => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(resolve);
+    });
+  });
+}
+
+function waitForAnimationEnd(element, fallbackMs) {
+  if (!element) {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    let finished = false;
+
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      element.removeEventListener('animationend', onEnd);
+      resolve();
+    };
+
+    const onEnd = event => {
+      if (event.target !== element) {
+        return;
+      }
+      finish();
+    };
+
+    element.addEventListener('animationend', onEnd);
+    window.setTimeout(finish, fallbackMs);
   });
 }
 
@@ -233,18 +335,52 @@ function spendEnergy(cost) {
 }
 
 async function applyAttack(amount) {
-  showHeroAttackJiggle();
-  await showAttackAnimation();
-  state.enemy.hp = Math.max(0, state.enemy.hp - amount);
-  showEnemyHpDrainAnimation();
+  for (let index = 0; index < amount; index += 1) {
+    if (state.enemy.hp <= 0) {
+      break;
+    }
+
+    showHeroAttackJiggle();
+    await showAttackAnimation();
+    state.enemy.hp = Math.max(0, state.enemy.hp - 1);
+    render();
+    await waitForNextPaint();
+    await sleep(90);
+  }
 }
 
 async function applyBlock(amount) {
+  const steps = Math.max(0, Math.floor(amount));
+  let resolveStepSequence = () => {};
+  let stepSequenceDone = Promise.resolve();
+
+  if (steps > 0) {
+    stepSequenceDone = new Promise(resolve => {
+      resolveStepSequence = resolve;
+    });
+  }
+
   await showHeroBlockCastAnimation(() => {
-    state.player.block += amount;
-    render();
+    if (steps <= 0) {
+      resolveStepSequence();
+      return;
+    }
+
     showBlockFillAnimation();
+
+    (async () => {
+      for (let index = 0; index < steps; index += 1) {
+        state.player.block += 1;
+        render();
+        await waitForNextPaint();
+        await sleep(90);
+      }
+
+      resolveStepSequence();
+    })();
   }, '🛡️');
+
+  await stepSequenceDone;
 }
 
 function showBlockFillAnimation() {
@@ -293,6 +429,21 @@ async function showHeroBlockCastAnimation(onGleamStart, castIcon = '🛡️') {
     castShield.parentNode.removeChild(castShield);
   }
 
+  if (els.heroArt && els.heroBase) {
+    const artRect = els.heroArt.getBoundingClientRect();
+    const heroRect = els.heroBase.getBoundingClientRect();
+
+    if (artRect.width > 0 && artRect.height > 0 && heroRect.width > 0 && heroRect.height > 0) {
+      const localCenterX = heroRect.left - artRect.left + heroRect.width * 0.5;
+      const localBottom = artRect.bottom - heroRect.bottom;
+      shimmer.style.left = localCenterX + 'px';
+      shimmer.style.bottom = localBottom + 'px';
+      shimmer.style.width = heroRect.width + 'px';
+      shimmer.style.height = heroRect.height + 'px';
+      shimmer.style.transform = 'translateX(-50%)';
+    }
+  }
+
   els.heroArt.appendChild(shimmer);
   if (typeof onGleamStart === 'function') {
     onGleamStart();
@@ -306,15 +457,42 @@ async function showHeroBlockCastAnimation(onGleamStart, castIcon = '🛡️') {
 
 async function applyHeal(amount) {
   await showHeroPotionAnimation();
-  showHeroBlockCastAnimation(undefined, '💖');
-
-  els.playerHpFill.classList.remove('player-hp-heal');
-  void els.playerHpFill.offsetWidth;
-  els.playerHpFill.classList.add('player-hp-heal');
-
+  const requestedHeal = Math.max(0, Math.floor(amount));
   const hpBefore = state.player.hp;
-  state.player.hp = Math.min(state.player.maxHp, state.player.hp + amount);
-  render();
+  const maxHealable = Math.max(0, state.player.maxHp - state.player.hp);
+  const steps = Math.min(requestedHeal, maxHealable);
+  let resolveStepSequence = () => {};
+  let stepSequenceDone = Promise.resolve();
+
+  if (steps > 0) {
+    stepSequenceDone = new Promise(resolve => {
+      resolveStepSequence = resolve;
+    });
+  }
+
+  await showHeroBlockCastAnimation(() => {
+    if (steps <= 0) {
+      resolveStepSequence();
+      return;
+    }
+
+    els.playerHpFill.classList.remove('player-hp-heal');
+    void els.playerHpFill.offsetWidth;
+    els.playerHpFill.classList.add('player-hp-heal');
+
+    (async () => {
+      for (let index = 0; index < steps; index += 1) {
+        state.player.hp = Math.min(state.player.maxHp, state.player.hp + 1);
+        render();
+        await waitForNextPaint();
+        await sleep(90);
+      }
+
+      resolveStepSequence();
+    })();
+  }, '💖');
+
+  await stepSequenceDone;
 
   window.setTimeout(() => {
     els.playerHpFill.classList.remove('player-hp-heal');
@@ -359,18 +537,32 @@ function showCardPlayAnimation(cardElement) {
 
 async function applyEnemyAttack() {
   const incomingDamage = state.enemy.nextIntent;
-  const damageTaken = Math.max(0, incomingDamage - state.player.block);
+  let damageTaken = 0;
 
-  if (incomingDamage > 0) {
-    showEnemyAttackJiggle();
+  if (incomingDamage <= 0) {
+    clearBlock();
+    return 0;
   }
 
-  if (damageTaken > 0) {
+  for (let index = 0; index < incomingDamage; index += 1) {
+    showEnemyAttackJiggle();
     await showHeroHitAnimation();
-    state.player.hp = Math.max(0, state.player.hp - damageTaken);
-    showPlayerHpDrainAnimation();
-  } else if (incomingDamage > 0) {
-    showHeroBlockAnimation();
+
+    if (state.player.block > 0) {
+      state.player.block = Math.max(0, state.player.block - 1);
+    } else if (state.player.hp > 0) {
+      state.player.hp = Math.max(0, state.player.hp - 1);
+      damageTaken += 1;
+    }
+
+    render();
+    await waitForNextPaint();
+
+    if (state.player.hp <= 0) {
+      break;
+    }
+
+    await sleep(90);
   }
 
   clearBlock();
@@ -531,8 +723,8 @@ async function playCard(cardUid, cardElement) {
   }
 
   state.turnLocked = true;
+
   await showCardPlayAnimation(cardElement);
-  state.turnLocked = false;
 
   state.hand.splice(handIndex, 1);
 
@@ -550,13 +742,16 @@ async function playCard(cardUid, cardElement) {
   state.discardPile.push(card);
 
   if (state.enemy.hp <= 0) {
-    state.turnLocked = true;
+    render();
+    await sleep(260);
     await showEnemyDefeatAnimation();
-    state.turnLocked = false;
     handleFightWin();
+    state.turnLocked = false;
+    render();
     return;
   }
 
+  state.turnLocked = false;
   render();
 }
 
@@ -676,11 +871,13 @@ function showAttackAnimation() {
     swing.textContent = '🗡️';
 
     els.enemyArt.appendChild(swing);
+    showEnemyHitJiggle();
     els.enemyArt.classList.remove('enemy-hit');
     void els.enemyArt.offsetWidth;
     els.enemyArt.classList.add('enemy-hit');
+    void swing.offsetWidth;
 
-    window.setTimeout(() => {
+    waitForAnimationEnd(swing, 620).then(() => {
       els.enemyArt.classList.remove('enemy-hit');
 
       if (swing.parentNode) {
@@ -688,7 +885,7 @@ function showAttackAnimation() {
       }
 
       resolve();
-    }, 520);
+    });
   });
 }
 
@@ -735,8 +932,9 @@ function showHeroHitAnimation() {
     void els.heroArt.offsetWidth;
     els.heroArt.classList.add('hero-hit');
     els.heroArt.appendChild(slash);
+    void slash.offsetWidth;
 
-    window.setTimeout(() => {
+    waitForAnimationEnd(slash, 560).then(() => {
       els.heroArt.classList.remove('hero-hit');
 
       if (slash.parentNode) {
@@ -744,7 +942,7 @@ function showHeroHitAnimation() {
       }
 
       resolve();
-    }, 420);
+    });
   });
 }
 
@@ -772,22 +970,50 @@ function showHeroBlockAnimation() {
 }
 
 function showHeroAttackJiggle() {
+  if (heroAttackJiggleTimeout) {
+    window.clearTimeout(heroAttackJiggleTimeout);
+    heroAttackJiggleTimeout = 0;
+  }
+
   els.heroArt.classList.remove('hero-attack-jiggle');
   void els.heroArt.offsetWidth;
   els.heroArt.classList.add('hero-attack-jiggle');
 
-  window.setTimeout(() => {
+  heroAttackJiggleTimeout = window.setTimeout(() => {
     els.heroArt.classList.remove('hero-attack-jiggle');
+    heroAttackJiggleTimeout = 0;
   }, 340);
 }
 
 function showEnemyAttackJiggle() {
+  if (enemyAttackJiggleTimeout) {
+    window.clearTimeout(enemyAttackJiggleTimeout);
+    enemyAttackJiggleTimeout = 0;
+  }
+
   els.enemyArt.classList.remove('enemy-attack-jiggle');
   void els.enemyArt.offsetWidth;
   els.enemyArt.classList.add('enemy-attack-jiggle');
 
-  window.setTimeout(() => {
+  enemyAttackJiggleTimeout = window.setTimeout(() => {
     els.enemyArt.classList.remove('enemy-attack-jiggle');
+    enemyAttackJiggleTimeout = 0;
+  }, 340);
+}
+
+function showEnemyHitJiggle() {
+  if (enemyHitJiggleTimeout) {
+    window.clearTimeout(enemyHitJiggleTimeout);
+    enemyHitJiggleTimeout = 0;
+  }
+
+  els.enemyArt.classList.remove('enemy-hit-jiggle');
+  void els.enemyArt.offsetWidth;
+  els.enemyArt.classList.add('enemy-hit-jiggle');
+
+  enemyHitJiggleTimeout = window.setTimeout(() => {
+    els.enemyArt.classList.remove('enemy-hit-jiggle');
+    enemyHitJiggleTimeout = 0;
   }, 340);
 }
 
@@ -979,9 +1205,76 @@ function renderBars() {
   els.enemyHpFill.style.width = (state.enemy.hp / state.enemy.maxHp) * 100 + '%';
 }
 
+function renderHeroBlockIcons() {
+  if (!els.heroBlockIcons) {
+    return;
+  }
+
+  const blockCount = Math.min(10, Math.max(0, Math.floor(state.player.block)));
+  els.heroBlockIcons.innerHTML = '';
+  els.heroBlockIcons.setAttribute('data-count', String(Math.max(0, Math.floor(state.player.block))));
+
+  for (let index = 0; index < blockCount; index += 1) {
+    const icon = document.createElement('span');
+    icon.className = 'hero-block-icon';
+    icon.textContent = '🛡️';
+    els.heroBlockIcons.appendChild(icon);
+  }
+}
+
+function renderEnemyDamageIcons() {
+  if (!els.enemyDamageIcons || !state.enemy) {
+    return;
+  }
+
+  const damageCount = Math.min(10, Math.max(0, Math.floor(state.enemy.nextIntent)));
+  els.enemyDamageIcons.innerHTML = '';
+  els.enemyDamageIcons.setAttribute('data-count', String(Math.max(0, Math.floor(state.enemy.nextIntent))));
+
+  for (let index = 0; index < damageCount; index += 1) {
+    const icon = document.createElement('span');
+    icon.className = 'enemy-damage-icon';
+    icon.textContent = '⚔️';
+    els.enemyDamageIcons.appendChild(icon);
+  }
+}
+
+function renderCombatHpIcons() {
+  const maxHeartsToShow = 30;
+  const heroCurrent = Math.max(0, Math.floor(state.player.hp));
+  const heroTotal = Math.min(maxHeartsToShow, Math.max(0, Math.floor(state.player.maxHp)));
+  const enemyCurrent = Math.max(0, Math.floor(state.enemy.hp));
+  const enemyTotal = Math.min(maxHeartsToShow, Math.max(0, Math.floor(state.enemy.maxHp)));
+
+  if (els.heroHpIcons) {
+    els.heroHpIcons.innerHTML = '';
+    els.heroHpIcons.setAttribute('data-count', String(heroCurrent));
+    for (let index = 0; index < heroTotal; index += 1) {
+      const icon = document.createElement('span');
+      icon.className = 'combat-hp-icon';
+      icon.textContent = index < heroCurrent ? '❤️' : '🖤';
+      els.heroHpIcons.appendChild(icon);
+    }
+  }
+
+  if (els.enemyHpIcons) {
+    els.enemyHpIcons.innerHTML = '';
+    els.enemyHpIcons.setAttribute('data-count', String(enemyCurrent));
+    for (let index = 0; index < enemyTotal; index += 1) {
+      const icon = document.createElement('span');
+      icon.className = 'combat-hp-icon';
+      icon.textContent = index < enemyCurrent ? '❤️' : '🖤';
+      els.enemyHpIcons.appendChild(icon);
+    }
+  }
+}
+
 function renderMeta() {
   els.heroBase.src = GAME_CONFIG.player.artSrc;
   els.enemyName.textContent = state.enemy.name;
+  if (els.enemyNameStage) {
+    els.enemyNameStage.textContent = state.enemy.name;
+  }
   els.energyRow.textContent = getEnergyIcons();
   els.enemyIntent.textContent = '🗡️ ' + state.enemy.nextIntent;
   els.enemyIntent.classList.remove('enemy-intent-fire');
@@ -1020,11 +1313,15 @@ function renderMeta() {
 
 function render() {
   renderBars();
+  renderCombatHpIcons();
+  renderHeroBlockIcons();
+  renderEnemyDamageIcons();
   renderMeta();
   renderHand();
   renderRewards();
   renderYouWonOverlay();
   renderYouDiedOverlay();
+  scheduleEnemyColumnCentering();
 }
 
 els.endTurnBtn.addEventListener('click', endTurn);
@@ -1040,6 +1337,15 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     closePileModal();
   }
+});
+window.addEventListener('resize', scheduleEnemyColumnCentering);
+els.enemyBaseImg.addEventListener('load', scheduleEnemyColumnCentering);
+els.enemyArt.addEventListener('animationend', event => {
+  if (event.target !== els.enemyArt) {
+    return;
+  }
+
+  scheduleEnemyColumnCentering();
 });
 
 resetState();
