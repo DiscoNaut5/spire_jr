@@ -231,6 +231,34 @@ function applyHeal(amount) {
   state.player.hp = Math.min(state.player.maxHp, state.player.hp + amount);
 }
 
+function showCardPlayAnimation(cardElement) {
+  if (!cardElement) {
+    return;
+  }
+
+  const rect = cardElement.getBoundingClientRect();
+  const clone = cardElement.cloneNode(true);
+  clone.classList.add('card-play-clone');
+  clone.style.left = rect.left + 'px';
+  clone.style.top = rect.top + 'px';
+  clone.style.width = rect.width + 'px';
+  clone.style.height = rect.height + 'px';
+  clone.style.margin = '0';
+  clone.style.pointerEvents = 'none';
+  clone.disabled = true;
+  document.body.appendChild(clone);
+
+  // Force style flush so the animation class transition starts reliably.
+  void clone.offsetWidth;
+  clone.classList.add('card-play-fly');
+
+  window.setTimeout(() => {
+    if (clone.parentNode) {
+      clone.parentNode.removeChild(clone);
+    }
+  }, 360);
+}
+
 function applyEnemyAttack() {
   const incomingDamage = state.enemy.nextIntent;
   const damageTaken = Math.max(0, incomingDamage - state.player.block);
@@ -524,7 +552,7 @@ function closePileModal() {
   els.pileModal.setAttribute('aria-hidden', 'true');
 }
 
-function playCard(cardUid) {
+function playCard(cardUid, cardElement) {
   if (state.gameOver || state.turnLocked || state.awaitingReward) {
     return;
   }
@@ -540,6 +568,8 @@ function playCard(cardUid) {
     render();
     return;
   }
+
+  showCardPlayAnimation(cardElement);
 
   state.hand.splice(handIndex, 1);
 
@@ -835,7 +865,7 @@ function renderHand() {
 
     button.disabled = isDisabled;
     bindCardTouchZoom(button);
-    button.addEventListener('click', () => playCard(card.uid));
+    button.addEventListener('click', event => playCard(card.uid, event.currentTarget));
     els.hand.appendChild(button);
   });
 }
