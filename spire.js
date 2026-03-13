@@ -12,6 +12,7 @@ const GAME_CONFIG = {
     { id: 'atk2', type: 'attack', value: 3, cost: 1, icon: '🗡️', label: 'Big Bonk', artSrc: 'assets/big_bonk.png' },
     { id: 'atk3', type: 'attack', value: 6, cost: 1, icon: '🗡️', label: 'Chain Lightning', artSrc: 'assets/mega_bonk.png' },
     { id: 'atk4', type: 'attack', value: 4, cost: 1, icon: '🗡️', label: 'Fireball', artSrc: 'assets/fireball.png' },
+    { id: 'atk5', type: 'attack', value: 5, cost: 1, icon: '🗡️', label: 'Fart in a Jar', artSrc: 'assets/fartjar.png' },
     { id: 'blk1', type: 'block', value: 2, cost: 1, icon: '🛡️', label: 'Hide', artSrc: 'assets/hide.png' },
     { id: 'blk2', type: 'block', value: 3, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/super_defend.png' },
     { id: 'blk3', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/defend.png' },
