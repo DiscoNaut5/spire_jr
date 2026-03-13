@@ -2,6 +2,14 @@ const GAME_CONFIG = {
   maxFights: 3,
   maxEnergy: 3,
   handSize: 5,
+  battlefields: [
+    { id: 'mars', image: 'assets/mars_background.png', position: '58% 36%' },
+    { id: 'haunted-mansion', image: 'assets/haunted_mansion_background.png', position: '50% 44%' },
+    { id: 'enchanted-forest', image: 'assets/enchanted_forest.png', position: '50% 42%' },
+    { id: 'dungeon', image: 'assets/dungeon.png', position: '50% 36%' },
+    { id: 'beach-castle', image: 'assets/beach_castle.png', position: '50% 46%' },
+    { id: 'disney-castle', image: 'assets/disney_castle.png', position: '50% 47%' }
+  ],
   player: {
     maxHp: 20,
     artSrc: 'assets/hero.png'
@@ -61,7 +69,11 @@ const els = {
   rewardChestImage: document.getElementById('rewardChestImage'),
   rewardPrompt: document.getElementById('rewardPrompt'),
   youWonOverlay: document.getElementById('youWonOverlay'),
+  youDiedOverlay: document.getElementById('youDiedOverlay'),
   fightAgainBtn: document.getElementById('fightAgainBtn'),
+  fightAgainBtnDied: document.getElementById('fightAgainBtnDied'),
+  arenaPanel: document.getElementById('arenaPanel'),
+  fightStage: document.getElementById('fightStage'),
   battleRow: document.getElementById('battleRow'),
   rewardChoices: document.getElementById('rewardChoices'),
   hand: document.getElementById('hand'),
@@ -126,6 +138,7 @@ function createInitialState() {
     rewardChestOpen: false,
     rewardRevealReady: false,
     rewardOptions: [],
+    battlefield: null,
     turnLocked: false,
     gameOver: false,
     message: 'Play cards, then tap End Turn.'
@@ -358,6 +371,14 @@ async function applyEnemyAttack() {
 
 function queueNextEnemyIntent() {
   state.enemy.nextIntent = randomFrom(state.enemy.intents);
+}
+
+function pickBattlefield() {
+  if (!Array.isArray(GAME_CONFIG.battlefields) || GAME_CONFIG.battlefields.length === 0) {
+    return null;
+  }
+
+  return randomFrom(GAME_CONFIG.battlefields);
 }
 
 function getDeckCount() {
@@ -623,6 +644,7 @@ function startFight() {
   state.rewardOptions = [];
   state.hand = [];
   state.enemy = createEnemyForFight(state.runFight);
+  state.battlefield = pickBattlefield();
   drawCards(GAME_CONFIG.handSize);
   render();
 }
@@ -870,6 +892,22 @@ function renderYouWonOverlay() {
   const showOverlay = state.gameOver && state.player.hp > 0;
   els.youWonOverlay.classList.toggle('hidden', !showOverlay);
   els.youWonOverlay.setAttribute('aria-hidden', showOverlay ? 'false' : 'true');
+  els.youDiedOverlay.classList.add('hidden');
+  els.youDiedOverlay.setAttribute('aria-hidden', 'true');
+
+  if (showOverlay) {
+    els.rewardChestOverlay.classList.add('hidden');
+    els.rewardChestOverlay.setAttribute('aria-hidden', 'true');
+    els.rewardChoices.innerHTML = '';
+  }
+}
+
+function renderYouDiedOverlay() {
+  const showOverlay = state.gameOver && state.player.hp <= 0;
+  els.youDiedOverlay.classList.toggle('hidden', !showOverlay);
+  els.youDiedOverlay.setAttribute('aria-hidden', showOverlay ? 'false' : 'true');
+  els.youWonOverlay.classList.add('hidden');
+  els.youWonOverlay.setAttribute('aria-hidden', 'true');
 
   if (showOverlay) {
     els.rewardChestOverlay.classList.add('hidden');
@@ -917,6 +955,15 @@ function renderMeta() {
   els.deckCounter.disabled = pileDisabled;
   els.drawCounter.disabled = pileDisabled;
   els.discardCounter.disabled = pileDisabled;
+
+  const arenaSurface = els.arenaPanel || els.fightStage;
+
+  if (arenaSurface) {
+    const image = state.battlefield && state.battlefield.image ? state.battlefield.image : '';
+    const position = state.battlefield && state.battlefield.position ? state.battlefield.position : '50% 50%';
+    arenaSurface.style.setProperty('--fight-bg-image', image ? 'url("' + image + '")' : 'none');
+    arenaSurface.style.setProperty('--fight-bg-position', position);
+  }
 }
 
 function render() {
@@ -925,6 +972,7 @@ function render() {
   renderHand();
   renderRewards();
   renderYouWonOverlay();
+  renderYouDiedOverlay();
 }
 
 els.endTurnBtn.addEventListener('click', endTurn);
@@ -933,6 +981,7 @@ els.drawCounter.addEventListener('click', () => openPileModal('draw'));
 els.discardCounter.addEventListener('click', () => openPileModal('discard'));
 els.rewardChestImage.addEventListener('click', openRewardChest);
 els.fightAgainBtn.addEventListener('click', resetState);
+els.fightAgainBtnDied.addEventListener('click', resetState);
 els.pileModalClose.addEventListener('click', closePileModal);
 els.pileModalBackdrop.addEventListener('click', closePileModal);
 document.addEventListener('keydown', event => {

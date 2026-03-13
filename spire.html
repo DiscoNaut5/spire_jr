@@ -4,48 +4,49 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Slay the Spire Jr.</title>
-  <link rel="stylesheet" href="spire.css?v=20260313aj" />
+  <link rel="stylesheet" href="spire.css?v=20260313bl" />
 </head>
 <body>
   <div class="wrap">
     <div class="arena">
-      <div class="panel player-panel">
-        <div>
-          <div class="meta-row">
-            <span>Hero</span>
-            <span id="fightCounter">Fight 1 of 3</span>
+      <div id="arenaPanel" class="panel arena-panel">
+        <div class="arena-hud">
+          <div class="combatant combatant-hero">
+            <div class="meta-row">
+              <span>Hero</span>
+              <span id="fightCounter">Fight 1 of 3</span>
+            </div>
+
+            <div class="meter-row">
+              <span class="meter-label">❤️</span>
+              <div class="hpbar"><div id="playerHpFill" class="fill hp"></div></div>
+              <span id="playerHpText" class="meter-value">20 / 20</span>
+            </div>
+
+            <div class="meter-row">
+              <span class="meter-label">🛡️</span>
+              <div class="hpbar"><div id="playerBlockFill" class="fill block"></div></div>
+              <span id="playerBlockText" class="meter-value">0</span>
+            </div>
+
           </div>
 
-          <div class="statline">
-            <span>❤️</span>
-            <span id="playerHpText" class="big-number">20 / 20</span>
-          </div>
-          <div class="hpbar"><div id="playerHpFill" class="fill hp"></div></div>
+          <div class="combatant combatant-enemy">
+            <div class="meta-row">
+              <span>Bad Guy</span>
+              <span></span>
+            </div>
 
-          <div class="statline">
-            <span>🛡️</span>
-            <span id="playerBlockText" class="big-number">0</span>
+            <div class="meter-row">
+              <span id="enemyName" class="meter-label">🟢 Blob</span>
+              <div class="hpbar"><div id="enemyHpFill" class="fill enemy"></div></div>
+              <span id="enemyHpText" class="meter-value">14 / 14</span>
+            </div>
           </div>
-          <div class="hpbar"><div id="playerBlockFill" class="fill block"></div></div>
-
-          <div id="energyRow" class="energy-row">⚡⚡⚡</div>
         </div>
 
-        <div class="hero-art" id="heroArt"><img id="heroBase" class="hero-base-img" src="assets/hero.png" alt="Hero" /></div>
-      </div>
-
-      <div class="panel enemy-panel">
-        <div>
-          <div class="meta-row">
-            <span>Bad Guy</span>
-            <span></span>
-          </div>
-
-          <div class="statline">
-            <span id="enemyName">🟢 Blob</span>
-            <span id="enemyHpText" class="big-number">14 / 14</span>
-          </div>
-          <div class="hpbar"><div id="enemyHpFill" class="fill enemy"></div></div>
+        <div id="fightStage" class="fight-stage">
+          <div class="hero-art" id="heroArt"><img id="heroBase" class="hero-base-img" src="assets/hero.png" alt="Hero" /></div>
           <div class="enemy-art" id="enemyArt">
             <img id="enemyBaseImg" class="enemy-base-img" src="" alt="Enemy" />
             <span id="enemyBase" class="enemy-base">🟢</span>
@@ -58,6 +59,7 @@
     <div class="panel">
       <div id="battleRow" class="battle-row">
         <div class="pile-column">
+          <div id="energyRow" class="energy-row">⚡⚡⚡</div>
           <button id="deckCounter" class="btn btn-secondary pile-btn">Deck 8</button>
           <button id="drawCounter" class="btn btn-secondary pile-btn">Draw 8</button>
           <button id="discardCounter" class="btn btn-secondary pile-btn">Discard 0</button>
@@ -100,6 +102,15 @@
     </div>
   </div>
 
+  <div id="youDiedOverlay" class="you-died-overlay hidden" aria-hidden="true">
+    <div class="you-died-backdrop"></div>
+    <div class="you-died-stage">
+      <div class="you-died-skull" aria-hidden="true">💀</div>
+      <div class="you-died-title">YOU DIED</div>
+      <button id="fightAgainBtnDied" class="btn btn-primary you-died-restart" type="button">Fight Again</button>
+    </div>
+  </div>
+
   <div id="pileModal" class="pile-modal hidden" aria-hidden="true">
     <div id="pileModalBackdrop" class="pile-modal-backdrop"></div>
     <div class="pile-modal-card" role="dialog" aria-modal="true" aria-labelledby="pileModalTitle">
@@ -112,6 +123,6 @@
     </div>
   </div>
 
-  <script src="spire.js?v=20260313aj"></script>
+  <script src="spire.js?v=20260313bl"></script>
 </body>
 </html>
