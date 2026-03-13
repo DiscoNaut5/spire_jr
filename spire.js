@@ -10,10 +10,11 @@ const GAME_CONFIG = {
   cardPool: [
     { id: 'atk1', type: 'attack', value: 2, cost: 1, icon: '🗡️', label: 'Bonk', artSrc: 'assets/attack.png' },
     { id: 'atk2', type: 'attack', value: 3, cost: 1, icon: '🗡️', label: 'Big Bonk', artSrc: 'assets/big_bonk.png' },
-    { id: 'atk3', type: 'attack', value: 4, cost: 1, icon: '🗡️', label: 'Mega Bonk', artSrc: 'assets/mega_bonk.png' },
+    { id: 'atk3', type: 'attack', value: 6, cost: 1, icon: '🗡️', label: 'Chain Lightning', artSrc: 'assets/mega_bonk.png' },
+    { id: 'atk4', type: 'attack', value: 4, cost: 1, icon: '🗡️', label: 'Fireball', artSrc: 'assets/fireball.png' },
     { id: 'blk1', type: 'block', value: 2, cost: 1, icon: '🛡️', label: 'Hide', artSrc: 'assets/hide.png' },
-    { id: 'blk2', type: 'block', value: 3, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/defend.png' },
-    { id: 'blk3', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/super_defend.png' },
+    { id: 'blk2', type: 'block', value: 3, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/super_defend.png' },
+    { id: 'blk3', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/defend.png' },
     { id: 'heal1', type: 'heal', value: 3, cost: 1, icon: '💖', label: 'Neosporin', artSrc: 'assets/neosporin.png' },
     { id: 'heal2', type: 'heal', value: 5, cost: 1, icon: '💖', label: 'Magic Potion', artSrc: 'assets/super_potion.png' }
   ],
