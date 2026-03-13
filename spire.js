@@ -6,20 +6,26 @@ const GAME_CONFIG = {
     maxHp: 20,
     artSrc: 'assets/hero.png'
   },
-  startingDeckIds: ['atk2', 'atk2', 'atk3', 'atk3', 'blk2', 'blk2', 'blk3', 'heal3'],
+  startingDeckIds: ['atk1', 'atk1', 'atk1', 'atk1', 'blk1', 'blk1', 'blk1', 'heal1'],
   cardPool: [
-    { id: 'atk2', type: 'attack', value: 2, cost: 1, icon: '🗡️', label: 'Bonk', artSrc: 'assets/attack.png' },
-    { id: 'atk3', type: 'attack', value: 3, cost: 1, icon: '🗡️', label: 'Big Bonk', artSrc: 'assets/attack.png' },
-    { id: 'atk4', type: 'attack', value: 4, cost: 1, icon: '🗡️', label: 'Mega Bonk', artSrc: 'assets/attack.png' },
-    { id: 'blk2', type: 'block', value: 2, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/hide.png' },
-    { id: 'blk3', type: 'block', value: 3, cost: 1, icon: '🛡️', label: 'Big Defend', artSrc: 'assets/hide.png' },
-    { id: 'blk4', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/hide.png' },
-    { id: 'heal3', type: 'heal', value: 3, cost: 1, icon: '💖', label: 'Magic Potion', artSrc: 'assets/potion.png' }
+    { id: 'atk1', type: 'attack', value: 2, cost: 1, icon: '🗡️', label: 'Bonk', artSrc: 'assets/attack.png' },
+    { id: 'atk2', type: 'attack', value: 3, cost: 1, icon: '🗡️', label: 'Big Bonk', artSrc: 'assets/big_bonk.png' },
+    { id: 'atk3', type: 'attack', value: 4, cost: 1, icon: '🗡️', label: 'Mega Bonk', artSrc: 'assets/mega_bonk.png' },
+    { id: 'blk1', type: 'block', value: 2, cost: 1, icon: '🛡️', label: 'Hide', artSrc: 'assets/hide.png' },
+    { id: 'blk2', type: 'block', value: 3, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/defend.png' },
+    { id: 'blk3', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/super_defend.png' },
+    { id: 'heal1', type: 'heal', value: 3, cost: 1, icon: '💖', label: 'Neosporin', artSrc: 'assets/neosporin.png' },
+    { id: 'heal2', type: 'heal', value: 5, cost: 1, icon: '💖', label: 'Magic Potion', artSrc: 'assets/super_potion.png' }
   ],
   enemies: [
-    { name: '🟢 Blob', artSrc: 'assets/broccoli.png', maxHp: 14, intents: [2, 3, 4] },
-    { name: '🐍 Snake', art: '🐍', maxHp: 18, intents: [3, 4, 5] },
-    { name: '🦀 Crab', art: '🦀', maxHp: 22, intents: [4, 5, 6] }
+    { name: 'Bats!', artSrc: 'assets/bats.png', maxHp: 7, intents: [1, 2, 2] },
+    { name: 'Birds!', artSrc: 'assets/birds.png', maxHp: 8, intents: [1, 2, 2] },
+    { name: 'Leech', artSrc: 'assets/leech.png', maxHp: 9, intents: [1, 2, 2] },
+    { name: 'Evil Snail', artSrc: 'assets/snail.png', maxHp: 10, intents: [1, 2, 2] },
+    { name: 'Evil Tardigrade', artSrc: 'assets/tardigrade.png', maxHp: 14, intents: [1, 2, 3] },
+    { name: '🐉 Dragon', artSrc: 'assets/dragon.png', maxHp: 18, intents: [3, 3, 4], attackFx: '🔥🔥🔥' },
+    { name: 'Broccoli Rob', artSrc: 'assets/broccoli.png', maxHp: 20, intents: [4, 4, 5] },
+    { name: 'dogs', artSrc: 'assets/dogs.png', maxHp: 24, intents: [3, 8, 9] },
   ]
 };
 
@@ -48,6 +54,13 @@ const els = {
   pileModalMeta: document.getElementById('pileModalMeta'),
   pileModalList: document.getElementById('pileModalList'),
   pileModalClose: document.getElementById('pileModalClose'),
+  rewardChestOverlay: document.getElementById('rewardChestOverlay'),
+  rewardChestImage: document.getElementById('rewardChestImage'),
+  rewardPrompt: document.getElementById('rewardPrompt'),
+  youWonOverlay: document.getElementById('youWonOverlay'),
+  fightAgainBtn: document.getElementById('fightAgainBtn'),
+  battleRow: document.getElementById('battleRow'),
+  rewardChoices: document.getElementById('rewardChoices'),
   hand: document.getElementById('hand'),
   endTurnBtn: document.getElementById('endTurnBtn')
 };
@@ -106,6 +119,10 @@ function createInitialState() {
     drawPile: [],
     discardPile: [],
     hand: [],
+    awaitingReward: false,
+    rewardChestOpen: false,
+    rewardRevealReady: false,
+    rewardOptions: [],
     turnLocked: false,
     gameOver: false,
     message: 'Play cards, then tap End Turn.'
@@ -113,6 +130,12 @@ function createInitialState() {
 }
 
 const state = createInitialState();
+let activeTouchZoomCard = null;
+let activeTouchZoomId = null;
+let touchZoomInitialized = false;
+let touchZoomStartX = 0;
+let touchZoomStartY = 0;
+let touchZoomStartTime = 0;
 
 function resetState() {
   nextUid = 1;
@@ -129,17 +152,21 @@ function resetDeck(cards) {
 
 function createEnemyForFight(fightNumber) {
   const baseEnemy = GAME_CONFIG.enemies[Math.min(fightNumber - 1, GAME_CONFIG.enemies.length - 1)];
-  const extraHp = (fightNumber - 1) * 2;
 
   return {
     name: baseEnemy.name,
     art: baseEnemy.art,
     artSrc: baseEnemy.artSrc,
+    attackFx: baseEnemy.attackFx || '🗡️',
     intents: baseEnemy.intents.slice(),
-    maxHp: baseEnemy.maxHp + extraHp,
-    hp: baseEnemy.maxHp + extraHp,
+    maxHp: baseEnemy.maxHp,
+    hp: baseEnemy.maxHp,
     nextIntent: randomFrom(baseEnemy.intents)
   };
+}
+
+function getEnemyAttackFx() {
+  return state.enemy && state.enemy.attackFx ? state.enemy.attackFx : '🗡️';
 }
 
 function setMessage(text) {
@@ -233,7 +260,8 @@ function getDeckCount() {
 }
 
 function getFightLabel() {
-  return 'Fight ' + state.runFight + ' of ' + GAME_CONFIG.maxFights;
+  const totalFights = Math.max(1, GAME_CONFIG.enemies.length);
+  return 'Fight ' + state.runFight + ' of ' + totalFights;
 }
 
 function getEnergyIcons() {
@@ -258,8 +286,177 @@ function getStatusMessage() {
   return state.message;
 }
 
+function isFinalFight() {
+  return state.runFight >= Math.max(1, GAME_CONFIG.enemies.length);
+}
+
 function getCardSummary(card) {
   return card.icon + ' ' + card.label;
+}
+
+function setActiveTouchZoomCard(nextCard) {
+  if (activeTouchZoomCard === nextCard) {
+    return;
+  }
+
+  if (activeTouchZoomCard) {
+    activeTouchZoomCard.classList.remove('touch-zoom');
+  }
+
+  activeTouchZoomCard = null;
+
+  if (nextCard && !nextCard.disabled) {
+    nextCard.classList.add('touch-zoom');
+    activeTouchZoomCard = nextCard;
+  }
+}
+
+function getCardAtPoint(clientX, clientY) {
+  const atPoint = document.elementFromPoint(clientX, clientY);
+  const card = atPoint ? atPoint.closest('.card') : null;
+  if (card instanceof HTMLButtonElement && card.classList.contains('touch-zoomable') && !card.disabled) {
+    return card;
+  }
+
+  // Safari can miss right-edge cards during touch scrubbing; fall back to nearest visible card.
+  const candidates = Array.from(document.querySelectorAll('.card.touch-zoomable:not(.disabled)'));
+  let bestCard = null;
+  let bestDistance = Infinity;
+
+  for (const candidate of candidates) {
+    if (!(candidate instanceof HTMLButtonElement)) {
+      continue;
+    }
+
+    const rect = candidate.getBoundingClientRect();
+    const expanded = 22;
+    const withinX = clientX >= rect.left - expanded && clientX <= rect.right + expanded;
+    const withinY = clientY >= rect.top - expanded && clientY <= rect.bottom + expanded;
+
+    if (!withinX || !withinY) {
+      continue;
+    }
+
+    const centerX = rect.left + rect.width * 0.5;
+    const centerY = rect.top + rect.height * 0.5;
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    const distSq = dx * dx + dy * dy;
+
+    if (distSq < bestDistance) {
+      bestDistance = distSq;
+      bestCard = candidate;
+    }
+  }
+
+  return bestCard;
+}
+
+function findTouchById(touchList, id) {
+  for (let i = 0; i < touchList.length; i += 1) {
+    if (touchList[i].identifier === id) {
+      return touchList[i];
+    }
+  }
+
+  return null;
+}
+
+function initTouchZoomScrub() {
+  if (touchZoomInitialized) {
+    return;
+  }
+
+  touchZoomInitialized = true;
+
+  document.addEventListener('touchstart', event => {
+    if (activeTouchZoomId !== null) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    if (!touch) {
+      return;
+    }
+
+    const target = event.target instanceof Element ? event.target : null;
+    const targetCard = target ? target.closest('.card.touch-zoomable') : null;
+    const card = targetCard instanceof HTMLButtonElement && !targetCard.disabled
+      ? targetCard
+      : getCardAtPoint(touch.clientX, touch.clientY);
+
+    if (!card) {
+      return;
+    }
+
+    activeTouchZoomId = touch.identifier;
+    touchZoomStartX = touch.clientX;
+    touchZoomStartY = touch.clientY;
+    touchZoomStartTime = performance.now();
+    setActiveTouchZoomCard(card);
+  }, { passive: true });
+
+  document.addEventListener('touchmove', event => {
+    if (activeTouchZoomId === null) {
+      return;
+    }
+
+    const touch = findTouchById(event.touches, activeTouchZoomId);
+    if (!touch) {
+      return;
+    }
+
+    const dx = touch.clientX - touchZoomStartX;
+    const dy = touch.clientY - touchZoomStartY;
+    const movedSq = dx * dx + dy * dy;
+    const timeSinceStart = performance.now() - touchZoomStartTime;
+    const shouldHoldInitialCard = timeSinceStart < 140 && movedSq < 196;
+    if (shouldHoldInitialCard) {
+      event.preventDefault();
+      return;
+    }
+
+    setActiveTouchZoomCard(getCardAtPoint(touch.clientX, touch.clientY));
+    event.preventDefault();
+  }, { passive: false });
+
+  function finishTouchZoom(event) {
+    if (activeTouchZoomId === null) {
+      return;
+    }
+
+    const touch = findTouchById(event.changedTouches, activeTouchZoomId);
+    if (!touch) {
+      return;
+    }
+
+    activeTouchZoomId = null;
+    touchZoomStartX = 0;
+    touchZoomStartY = 0;
+    touchZoomStartTime = 0;
+
+    window.setTimeout(() => {
+      setActiveTouchZoomCard(null);
+    }, 80);
+  }
+
+  document.addEventListener('touchend', finishTouchZoom, { passive: true });
+  document.addEventListener('touchcancel', finishTouchZoom, { passive: true });
+}
+
+function bindCardTouchZoom(cardButton) {
+  cardButton.classList.add('touch-zoomable');
+}
+
+function buildRewardOptions(count) {
+  const starterIds = new Set(GAME_CONFIG.startingDeckIds);
+  const rewardPool = GAME_CONFIG.cardPool.filter(card => !starterIds.has(card.id));
+  const sourcePool = rewardPool.length > 0 ? rewardPool : GAME_CONFIG.cardPool;
+  const pickCount = Math.min(count, sourcePool.length);
+
+  return shuffle(sourcePool.slice())
+    .slice(0, pickCount)
+    .map(card => card.id);
 }
 
 function renderPileModalContent(title, cards, meta) {
@@ -286,6 +483,10 @@ function renderPileModalContent(title, cards, meta) {
 }
 
 function openPileModal(pileType) {
+  if (state.awaitingReward) {
+    return;
+  }
+
   if (pileType === 'deck') {
     const deckCards = state.hand.concat(state.drawPile, state.discardPile);
     const meta = 'Total ' + deckCards.length + ' cards • Draw ' + state.drawPile.length + ' • Discard ' + state.discardPile.length + ' • Hand ' + state.hand.length;
@@ -308,7 +509,7 @@ function closePileModal() {
 }
 
 function playCard(cardUid) {
-  if (state.gameOver || state.turnLocked) {
+  if (state.gameOver || state.turnLocked || state.awaitingReward) {
     return;
   }
 
@@ -350,7 +551,7 @@ function playCard(cardUid) {
 }
 
 async function endTurn() {
-  if (state.gameOver || state.turnLocked) {
+  if (state.gameOver || state.turnLocked || state.awaitingReward) {
     return;
   }
 
@@ -388,22 +589,69 @@ async function endTurn() {
 }
 
 function handleFightWin() {
-  if (state.runFight >= GAME_CONFIG.maxFights) {
+  if (isFinalFight()) {
+    state.awaitingReward = false;
+    state.rewardChestOpen = false;
+    state.rewardRevealReady = false;
+    state.rewardOptions = [];
+    closePileModal();
     state.gameOver = true;
     setMessage('You won the whole adventure. Nice job!');
     render();
     return;
   }
 
-  state.runFight += 1;
   moveHandToDiscard();
-  setMessage('You won that fight. A new monster appears!');
+  state.awaitingReward = true;
+  state.rewardChestOpen = false;
+  state.rewardRevealReady = false;
+  state.rewardOptions = buildRewardOptions(3);
+  closePileModal();
+  setMessage('Choose a reward card.');
+  render();
+}
+
+async function pickReward(cardId, selectedEl) {
+  if (!state.awaitingReward || !state.rewardChestOpen) {
+    return;
+  }
+
+  const template = findCardTemplate(cardId);
+  if (!template) {
+    return;
+  }
+
+  state.turnLocked = true;
+
+  const rewardButtons = Array.from(els.rewardChoices.querySelectorAll('.reward-choice'));
+  rewardButtons.forEach(button => {
+    if (button === selectedEl) {
+      button.classList.add('reward-choice-picked');
+    } else {
+      button.classList.add('reward-choice-fade');
+    }
+  });
+
+  await sleep(640);
+
+  state.discardPile.push(cloneCard(template));
+  state.awaitingReward = false;
+  state.rewardChestOpen = false;
+  state.rewardRevealReady = false;
+  state.rewardOptions = [];
+  state.runFight += 1;
+  state.turnLocked = false;
+  setMessage('You picked ' + template.label + '. A new monster appears!');
   startFight();
 }
 
 function startFight() {
   clearBlock();
   refillEnergy();
+  state.awaitingReward = false;
+  state.rewardChestOpen = false;
+  state.rewardRevealReady = false;
+  state.rewardOptions = [];
   state.hand = [];
   state.enemy = createEnemyForFight(state.runFight);
   drawCards(GAME_CONFIG.handSize);
@@ -432,7 +680,8 @@ function showAttackAnimation() {
 function showHeroHitAnimation() {
   const slash = document.createElement('div');
   slash.className = 'hero-slash';
-  slash.textContent = '🗡️';
+  slash.textContent = getEnemyAttackFx();
+  slash.classList.toggle('hero-slash-fire', slash.textContent.includes('🔥'));
 
   els.heroArt.classList.remove('hero-hit');
   void els.heroArt.offsetWidth;
@@ -454,7 +703,8 @@ function showHeroBlockAnimation() {
 
   const ricochetSword = document.createElement('div');
   ricochetSword.className = 'hero-blocked-sword';
-  ricochetSword.textContent = '🗡️';
+  ricochetSword.textContent = getEnemyAttackFx();
+  ricochetSword.classList.toggle('hero-blocked-fire', ricochetSword.textContent.includes('🔥'));
 
   els.heroArt.appendChild(shieldBurst);
   els.heroArt.appendChild(ricochetSword);
@@ -563,14 +813,89 @@ function renderHand() {
       : '<div class="card-icon">' + card.icon + '</div>';
 
     button.innerHTML =
-      '<div class="card-cost">⚡' + card.cost + '</div>' +
       '<div class="card-media">' + cardArt + '</div>' +
       '<div class="card-meta"><div class="card-value">' + card.value + '</div><div class="card-label">' + card.label + '</div></div>';
 
     button.disabled = isDisabled;
+    bindCardTouchZoom(button);
     button.addEventListener('click', () => playCard(card.uid));
     els.hand.appendChild(button);
   });
+}
+
+function openRewardChest() {
+  if (!state.awaitingReward || state.rewardChestOpen) {
+    return;
+  }
+
+  state.rewardChestOpen = true;
+  state.rewardRevealReady = false;
+  render();
+
+  window.setTimeout(() => {
+    if (!state.awaitingReward || !state.rewardChestOpen) {
+      return;
+    }
+    state.rewardRevealReady = true;
+    render();
+  }, 220);
+}
+
+function renderRewards() {
+  if (!state.awaitingReward || state.gameOver) {
+    els.rewardChestOverlay.classList.add('hidden');
+    els.rewardChestOverlay.setAttribute('aria-hidden', 'true');
+    els.rewardChoices.innerHTML = '';
+    return;
+  }
+
+  els.rewardChestOverlay.classList.remove('hidden');
+  els.rewardChestOverlay.setAttribute('aria-hidden', 'false');
+  els.rewardChestImage.src = state.rewardChestOpen ? 'assets/open_treasure.png' : 'assets/closed_treasure.png';
+  els.rewardPrompt.textContent = state.rewardChestOpen
+    ? 'Pick 1 reward card'
+    : 'Click the chest to open your reward';
+
+  els.rewardChoices.innerHTML = '';
+  if (!state.rewardChestOpen || !state.rewardRevealReady) {
+    return;
+  }
+
+  state.rewardOptions.forEach((cardId, index) => {
+    const card = findCardTemplate(cardId);
+    if (!card) {
+      return;
+    }
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'card reward-choice reward-choice-pop card-type-' + card.type;
+    button.style.animationDelay = String(index * 90) + 'ms';
+
+    const cardArt = card.artSrc
+      ? '<img class="card-art" src="' + card.artSrc + '" alt="' + card.label + ' art" />'
+      : '<div class="card-icon">' + card.icon + '</div>';
+
+    button.innerHTML =
+      '<div class="card-media">' + cardArt + '</div>' +
+      '<div class="card-meta"><div class="card-value">' + card.value + '</div><div class="card-label">' + card.label + '</div></div>';
+
+    button.addEventListener('click', () => pickReward(card.id, button));
+    bindCardTouchZoom(button);
+    els.rewardChoices.appendChild(button);
+  });
+}
+
+function renderYouWonOverlay() {
+  const showOverlay = state.gameOver && state.player.hp > 0;
+  els.youWonOverlay.classList.toggle('hidden', !showOverlay);
+  els.youWonOverlay.setAttribute('aria-hidden', showOverlay ? 'false' : 'true');
+
+  if (showOverlay) {
+    els.rewardChestOverlay.classList.add('hidden');
+    els.rewardChestOverlay.setAttribute('aria-hidden', 'true');
+    els.rewardChoices.innerHTML = '';
+  }
 }
 
 function renderBars() {
@@ -589,6 +914,7 @@ function renderMeta() {
   els.enemyName.textContent = state.enemy.name;
   els.energyRow.textContent = getEnergyIcons();
   els.enemyIntent.textContent = '🗡️ ' + state.enemy.nextIntent;
+  els.enemyIntent.classList.remove('enemy-intent-fire');
   els.fightCounter.textContent = getFightLabel();
   els.deckCounter.textContent = 'Deck ' + getDeckCount();
   els.drawCounter.textContent = 'Draw ' + state.drawPile.length;
@@ -603,22 +929,30 @@ function renderMeta() {
     els.enemyBase.style.display = 'block';
     els.enemyBase.textContent = state.enemy.art;
   }
-  const endTurnReady = !state.gameOver && state.energy <= 0;
-  els.endTurnBtn.disabled = state.gameOver || state.turnLocked;
+  const endTurnReady = !state.gameOver && !state.awaitingReward && state.energy <= 0;
+  els.endTurnBtn.disabled = state.gameOver || state.turnLocked || state.awaitingReward;
   els.endTurnBtn.classList.toggle('end-turn-ready', endTurnReady);
   els.endTurnBtn.setAttribute('data-ready', endTurnReady ? 'true' : 'false');
+  const pileDisabled = state.gameOver || state.turnLocked || state.awaitingReward;
+  els.deckCounter.disabled = pileDisabled;
+  els.drawCounter.disabled = pileDisabled;
+  els.discardCounter.disabled = pileDisabled;
 }
 
 function render() {
   renderBars();
   renderMeta();
   renderHand();
+  renderRewards();
+  renderYouWonOverlay();
 }
 
 els.endTurnBtn.addEventListener('click', endTurn);
 els.deckCounter.addEventListener('click', () => openPileModal('deck'));
 els.drawCounter.addEventListener('click', () => openPileModal('draw'));
 els.discardCounter.addEventListener('click', () => openPileModal('discard'));
+els.rewardChestImage.addEventListener('click', openRewardChest);
+els.fightAgainBtn.addEventListener('click', resetState);
 els.pileModalClose.addEventListener('click', closePileModal);
 els.pileModalBackdrop.addEventListener('click', closePileModal);
 document.addEventListener('keydown', event => {
@@ -627,4 +961,5 @@ document.addEventListener('keydown', event => {
   }
 });
 
+initTouchZoomScrub();
 resetState();
