@@ -239,7 +239,7 @@ async function applyBlock(amount) {
     state.player.block += amount;
     render();
     showBlockFillAnimation();
-  });
+  }, '🛡️');
 }
 
 function showBlockFillAnimation() {
@@ -272,12 +272,14 @@ function showPlayerHpDrainAnimation() {
   }, 760);
 }
 
-async function showHeroBlockCastAnimation(onGleamStart) {
+async function showHeroBlockCastAnimation(onGleamStart, castIcon = '🛡️') {
   const castShield = document.createElement('div');
   castShield.className = 'hero-cast-shield';
+  castShield.setAttribute('data-cast-icon', castIcon);
 
   const shimmer = document.createElement('div');
   shimmer.className = 'hero-body-gleam';
+  shimmer.classList.toggle('hero-body-gleam-heal', castIcon === '💖');
 
   els.heroArt.appendChild(castShield);
 
@@ -299,6 +301,7 @@ async function showHeroBlockCastAnimation(onGleamStart) {
 
 async function applyHeal(amount) {
   await showHeroPotionAnimation();
+  showHeroBlockCastAnimation(undefined, '💖');
 
   els.playerHpFill.classList.remove('player-hp-heal');
   void els.playerHpFill.offsetWidth;
