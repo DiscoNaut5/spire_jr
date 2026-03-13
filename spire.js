@@ -133,12 +133,6 @@ function createInitialState() {
 }
 
 const state = createInitialState();
-let activeTouchZoomCard = null;
-let activeTouchZoomId = null;
-let touchZoomInitialized = false;
-let touchZoomStartX = 0;
-let touchZoomStartY = 0;
-let touchZoomStartTime = 0;
 
 function resetState() {
   nextUid = 1;
@@ -220,49 +214,129 @@ function spendEnergy(cost) {
   return true;
 }
 
-function applyAttack(amount) {
-  state.enemy.hp = Math.max(0, state.enemy.hp - amount);
+async function applyAttack(amount) {
   showHeroAttackJiggle();
-  showAttackAnimation();
+  await showAttackAnimation();
+  state.enemy.hp = Math.max(0, state.enemy.hp - amount);
+  showEnemyHpDrainAnimation();
 }
 
-function applyBlock(amount) {
-  state.player.block += amount;
+async function applyBlock(amount) {
+  await showHeroBlockCastAnimation(() => {
+    state.player.block += amount;
+    render();
+    showBlockFillAnimation();
+  });
 }
 
-function applyHeal(amount) {
+function showBlockFillAnimation() {
+  els.playerBlockFill.classList.remove('block-gain');
+  void els.playerBlockFill.offsetWidth;
+  els.playerBlockFill.classList.add('block-gain');
+
+  window.setTimeout(() => {
+    els.playerBlockFill.classList.remove('block-gain');
+  }, 720);
+}
+
+function showEnemyHpDrainAnimation() {
+  els.enemyHpFill.classList.remove('enemy-hp-drain');
+  void els.enemyHpFill.offsetWidth;
+  els.enemyHpFill.classList.add('enemy-hp-drain');
+
+  window.setTimeout(() => {
+    els.enemyHpFill.classList.remove('enemy-hp-drain');
+  }, 760);
+}
+
+function showPlayerHpDrainAnimation() {
+  els.playerHpFill.classList.remove('player-hp-drain');
+  void els.playerHpFill.offsetWidth;
+  els.playerHpFill.classList.add('player-hp-drain');
+
+  window.setTimeout(() => {
+    els.playerHpFill.classList.remove('player-hp-drain');
+  }, 760);
+}
+
+async function showHeroBlockCastAnimation(onGleamStart) {
+  const castShield = document.createElement('div');
+  castShield.className = 'hero-cast-shield';
+
+  const shimmer = document.createElement('div');
+  shimmer.className = 'hero-body-gleam';
+
+  els.heroArt.appendChild(castShield);
+
+  await sleep(725);
+  if (castShield.parentNode) {
+    castShield.parentNode.removeChild(castShield);
+  }
+
+  els.heroArt.appendChild(shimmer);
+  if (typeof onGleamStart === 'function') {
+    onGleamStart();
+  }
+  await sleep(870);
+
+  if (shimmer.parentNode) {
+    shimmer.parentNode.removeChild(shimmer);
+  }
+}
+
+async function applyHeal(amount) {
+  await showHeroPotionAnimation();
+
+  els.playerHpFill.classList.remove('player-hp-heal');
+  void els.playerHpFill.offsetWidth;
+  els.playerHpFill.classList.add('player-hp-heal');
+
+  const hpBefore = state.player.hp;
   state.player.hp = Math.min(state.player.maxHp, state.player.hp + amount);
+  render();
+
+  window.setTimeout(() => {
+    els.playerHpFill.classList.remove('player-hp-heal');
+  }, 1180);
+
+  return state.player.hp - hpBefore;
 }
 
 function showCardPlayAnimation(cardElement) {
   if (!cardElement) {
-    return;
+    return Promise.resolve();
   }
 
-  const rect = cardElement.getBoundingClientRect();
-  const clone = cardElement.cloneNode(true);
-  clone.classList.add('card-play-clone');
-  clone.style.left = rect.left + 'px';
-  clone.style.top = rect.top + 'px';
-  clone.style.width = rect.width + 'px';
-  clone.style.height = rect.height + 'px';
-  clone.style.margin = '0';
-  clone.style.pointerEvents = 'none';
-  clone.disabled = true;
-  document.body.appendChild(clone);
+  return new Promise(resolve => {
+    const rect = cardElement.getBoundingClientRect();
+    const clone = cardElement.cloneNode(true);
+    cardElement.style.visibility = 'hidden';
+    cardElement.style.pointerEvents = 'none';
+    clone.style.visibility = 'visible';
+    clone.classList.add('card-play-clone');
+    clone.style.left = rect.left + 'px';
+    clone.style.top = rect.top + 'px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.margin = '0';
+    clone.style.pointerEvents = 'none';
+    clone.disabled = true;
+    document.body.appendChild(clone);
 
-  // Force style flush so the animation class transition starts reliably.
-  void clone.offsetWidth;
-  clone.classList.add('card-play-fly');
+    // Force style flush so the animation class transition starts reliably.
+    void clone.offsetWidth;
+    clone.classList.add('card-play-fly');
 
-  window.setTimeout(() => {
-    if (clone.parentNode) {
-      clone.parentNode.removeChild(clone);
-    }
-  }, 360);
+    window.setTimeout(() => {
+      if (clone.parentNode) {
+        clone.parentNode.removeChild(clone);
+      }
+      resolve();
+    }, 640);
+  });
 }
 
-function applyEnemyAttack() {
+async function applyEnemyAttack() {
   const incomingDamage = state.enemy.nextIntent;
   const damageTaken = Math.max(0, incomingDamage - state.player.block);
 
@@ -270,10 +344,10 @@ function applyEnemyAttack() {
     showEnemyAttackJiggle();
   }
 
-  state.player.hp = Math.max(0, state.player.hp - damageTaken);
-
   if (damageTaken > 0) {
-    showHeroHitAnimation();
+    await showHeroHitAnimation();
+    state.player.hp = Math.max(0, state.player.hp - damageTaken);
+    showPlayerHpDrainAnimation();
   } else if (incomingDamage > 0) {
     showHeroBlockAnimation();
   }
@@ -341,160 +415,6 @@ function getCardTypeStatIcon(cardType) {
   return '';
 }
 
-function setActiveTouchZoomCard(nextCard) {
-  if (activeTouchZoomCard === nextCard) {
-    return;
-  }
-
-  if (activeTouchZoomCard) {
-    activeTouchZoomCard.classList.remove('touch-zoom');
-  }
-
-  activeTouchZoomCard = null;
-
-  if (nextCard && !nextCard.disabled) {
-    nextCard.classList.add('touch-zoom');
-    activeTouchZoomCard = nextCard;
-  }
-}
-
-function getCardAtPoint(clientX, clientY) {
-  const atPoint = document.elementFromPoint(clientX, clientY);
-  const card = atPoint ? atPoint.closest('.card') : null;
-  if (card instanceof HTMLButtonElement && card.classList.contains('touch-zoomable') && !card.disabled) {
-    return card;
-  }
-
-  // Safari can miss right-edge cards during touch scrubbing; fall back to nearest visible card.
-  const candidates = Array.from(document.querySelectorAll('.card.touch-zoomable:not(.disabled)'));
-  let bestCard = null;
-  let bestDistance = Infinity;
-
-  for (const candidate of candidates) {
-    if (!(candidate instanceof HTMLButtonElement)) {
-      continue;
-    }
-
-    const rect = candidate.getBoundingClientRect();
-    const expanded = 22;
-    const withinX = clientX >= rect.left - expanded && clientX <= rect.right + expanded;
-    const withinY = clientY >= rect.top - expanded && clientY <= rect.bottom + expanded;
-
-    if (!withinX || !withinY) {
-      continue;
-    }
-
-    const centerX = rect.left + rect.width * 0.5;
-    const centerY = rect.top + rect.height * 0.5;
-    const dx = clientX - centerX;
-    const dy = clientY - centerY;
-    const distSq = dx * dx + dy * dy;
-
-    if (distSq < bestDistance) {
-      bestDistance = distSq;
-      bestCard = candidate;
-    }
-  }
-
-  return bestCard;
-}
-
-function findTouchById(touchList, id) {
-  for (let i = 0; i < touchList.length; i += 1) {
-    if (touchList[i].identifier === id) {
-      return touchList[i];
-    }
-  }
-
-  return null;
-}
-
-function initTouchZoomScrub() {
-  if (touchZoomInitialized) {
-    return;
-  }
-
-  touchZoomInitialized = true;
-
-  document.addEventListener('touchstart', event => {
-    if (activeTouchZoomId !== null) {
-      return;
-    }
-
-    const touch = event.changedTouches[0];
-    if (!touch) {
-      return;
-    }
-
-    const target = event.target instanceof Element ? event.target : null;
-    const targetCard = target ? target.closest('.card.touch-zoomable') : null;
-    const card = targetCard instanceof HTMLButtonElement && !targetCard.disabled
-      ? targetCard
-      : getCardAtPoint(touch.clientX, touch.clientY);
-
-    if (!card) {
-      return;
-    }
-
-    activeTouchZoomId = touch.identifier;
-    touchZoomStartX = touch.clientX;
-    touchZoomStartY = touch.clientY;
-    touchZoomStartTime = performance.now();
-    setActiveTouchZoomCard(card);
-  }, { passive: true });
-
-  document.addEventListener('touchmove', event => {
-    if (activeTouchZoomId === null) {
-      return;
-    }
-
-    const touch = findTouchById(event.touches, activeTouchZoomId);
-    if (!touch) {
-      return;
-    }
-
-    const dx = touch.clientX - touchZoomStartX;
-    const dy = touch.clientY - touchZoomStartY;
-    const movedSq = dx * dx + dy * dy;
-    const timeSinceStart = performance.now() - touchZoomStartTime;
-    const shouldHoldInitialCard = timeSinceStart < 140 && movedSq < 196;
-    if (shouldHoldInitialCard) {
-      event.preventDefault();
-      return;
-    }
-
-    setActiveTouchZoomCard(getCardAtPoint(touch.clientX, touch.clientY));
-    event.preventDefault();
-  }, { passive: false });
-
-  function finishTouchZoom(event) {
-    if (activeTouchZoomId === null) {
-      return;
-    }
-
-    const touch = findTouchById(event.changedTouches, activeTouchZoomId);
-    if (!touch) {
-      return;
-    }
-
-    activeTouchZoomId = null;
-    touchZoomStartX = 0;
-    touchZoomStartY = 0;
-    touchZoomStartTime = 0;
-
-    window.setTimeout(() => {
-      setActiveTouchZoomCard(null);
-    }, 80);
-  }
-
-  document.addEventListener('touchend', finishTouchZoom, { passive: true });
-  document.addEventListener('touchcancel', finishTouchZoom, { passive: true });
-}
-
-function bindCardTouchZoom(cardButton) {
-  cardButton.classList.add('touch-zoomable');
-}
-
 function buildRewardOptions(count) {
   const starterIds = new Set(GAME_CONFIG.startingDeckIds);
   const rewardPool = GAME_CONFIG.cardPool.filter(card => !starterIds.has(card.id));
@@ -555,7 +475,7 @@ function closePileModal() {
   els.pileModal.setAttribute('aria-hidden', 'true');
 }
 
-function playCard(cardUid, cardElement) {
+async function playCard(cardUid, cardElement) {
   if (state.gameOver || state.turnLocked || state.awaitingReward) {
     return;
   }
@@ -572,21 +492,21 @@ function playCard(cardUid, cardElement) {
     return;
   }
 
-  showCardPlayAnimation(cardElement);
+  state.turnLocked = true;
+  await showCardPlayAnimation(cardElement);
+  state.turnLocked = false;
 
   state.hand.splice(handIndex, 1);
 
   if (card.type === 'attack') {
-    applyAttack(card.value);
+    await applyAttack(card.value);
     setMessage('Bonk! You hit for ' + card.value + '.');
   } else if (card.type === 'block') {
-    applyBlock(card.value);
+    await applyBlock(card.value);
     setMessage('Nice! You built ' + card.value + ' block.');
   } else if (card.type === 'heal') {
-    showHeroPotionAnimation();
-    const hpBefore = state.player.hp;
-    applyHeal(card.value);
-    setMessage('Yum! You healed ' + (state.player.hp - hpBefore) + '.');
+    const healed = await applyHeal(card.value);
+    setMessage('Yum! You healed ' + healed + '.');
   }
 
   state.discardPile.push(card);
@@ -610,7 +530,7 @@ async function endTurn() {
 
   await sleep(220);
 
-  const damageTaken = applyEnemyAttack();
+  const damageTaken = await applyEnemyAttack();
   render();
 
   if (state.player.hp <= 0) {
@@ -708,42 +628,50 @@ function startFight() {
 }
 
 function showAttackAnimation() {
-  const swing = document.createElement('div');
-  swing.className = 'sword-swing';
-  swing.textContent = '🗡️';
+  return new Promise(resolve => {
+    const swing = document.createElement('div');
+    swing.className = 'sword-swing';
+    swing.textContent = '🗡️';
 
-  els.enemyArt.appendChild(swing);
-  els.enemyArt.classList.remove('enemy-hit');
-  void els.enemyArt.offsetWidth;
-  els.enemyArt.classList.add('enemy-hit');
-
-  window.setTimeout(() => {
+    els.enemyArt.appendChild(swing);
     els.enemyArt.classList.remove('enemy-hit');
+    void els.enemyArt.offsetWidth;
+    els.enemyArt.classList.add('enemy-hit');
 
-    if (swing.parentNode) {
-      swing.parentNode.removeChild(swing);
-    }
-  }, 520);
+    window.setTimeout(() => {
+      els.enemyArt.classList.remove('enemy-hit');
+
+      if (swing.parentNode) {
+        swing.parentNode.removeChild(swing);
+      }
+
+      resolve();
+    }, 520);
+  });
 }
 
 function showHeroHitAnimation() {
-  const slash = document.createElement('div');
-  slash.className = 'hero-slash';
-  slash.textContent = getEnemyAttackFx();
-  slash.classList.toggle('hero-slash-fire', slash.textContent.includes('🔥'));
+  return new Promise(resolve => {
+    const slash = document.createElement('div');
+    slash.className = 'hero-slash';
+    slash.textContent = getEnemyAttackFx();
+    slash.classList.toggle('hero-slash-fire', slash.textContent.includes('🔥'));
 
-  els.heroArt.classList.remove('hero-hit');
-  void els.heroArt.offsetWidth;
-  els.heroArt.classList.add('hero-hit');
-  els.heroArt.appendChild(slash);
-
-  window.setTimeout(() => {
     els.heroArt.classList.remove('hero-hit');
+    void els.heroArt.offsetWidth;
+    els.heroArt.classList.add('hero-hit');
+    els.heroArt.appendChild(slash);
 
-    if (slash.parentNode) {
-      slash.parentNode.removeChild(slash);
-    }
-  }, 420);
+    window.setTimeout(() => {
+      els.heroArt.classList.remove('hero-hit');
+
+      if (slash.parentNode) {
+        slash.parentNode.removeChild(slash);
+      }
+
+      resolve();
+    }, 420);
+  });
 }
 
 function showHeroBlockAnimation() {
@@ -790,6 +718,7 @@ function showEnemyAttackJiggle() {
 }
 
 function showHeroPotionAnimation() {
+  return new Promise(resolve => {
   const potion = document.createElement('div');
   potion.className = 'hero-potion-arc';
   potion.textContent = '🧪';
@@ -839,9 +768,11 @@ function showHeroPotionAnimation() {
     if (potion.parentNode) {
       potion.parentNode.removeChild(potion);
     }
+    resolve();
   }
 
   window.requestAnimationFrame(tick);
+  });
 }
 
 function renderHand() {
@@ -867,7 +798,6 @@ function renderHand() {
       '<div class="card-meta"><div class="card-stat-icon">' + getCardTypeStatIcon(card.type) + '</div><div class="card-value">' + card.value + '</div></div>';
 
     button.disabled = isDisabled;
-    bindCardTouchZoom(button);
     button.addEventListener('click', event => playCard(card.uid, event.currentTarget));
     els.hand.appendChild(button);
   });
@@ -932,7 +862,6 @@ function renderRewards() {
       '<div class="card-meta"><div class="card-stat-icon">' + getCardTypeStatIcon(card.type) + '</div><div class="card-value">' + card.value + '</div></div>';
 
     button.addEventListener('click', () => pickReward(card.id, button));
-    bindCardTouchZoom(button);
     els.rewardChoices.appendChild(button);
   });
 }
@@ -1012,5 +941,4 @@ document.addEventListener('keydown', event => {
   }
 });
 
-initTouchZoomScrub();
 resetState();
