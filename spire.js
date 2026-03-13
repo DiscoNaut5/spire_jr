@@ -2,6 +2,7 @@ const GAME_CONFIG = {
   maxFights: 3,
   maxEnergy: 3,
   handSize: 5,
+  debugEnemyHpOverride: null,
   battlefields: [
     { id: 'mars', image: 'assets/mars_background.png', position: '58% 36%' },
     { id: 'haunted-mansion', image: 'assets/haunted_mansion_background.png', position: '50% 44%' },
@@ -162,6 +163,9 @@ function resetDeck(cards) {
 
 function createEnemyForFight(fightNumber) {
   const baseEnemy = GAME_CONFIG.enemies[Math.min(fightNumber - 1, GAME_CONFIG.enemies.length - 1)];
+  const maxHp = Number.isFinite(GAME_CONFIG.debugEnemyHpOverride)
+    ? Math.max(1, GAME_CONFIG.debugEnemyHpOverride)
+    : baseEnemy.maxHp;
 
   return {
     name: baseEnemy.name,
@@ -169,8 +173,8 @@ function createEnemyForFight(fightNumber) {
     artSrc: baseEnemy.artSrc,
     attackFx: baseEnemy.attackFx || '🗡️',
     intents: baseEnemy.intents.slice(),
-    maxHp: baseEnemy.maxHp,
-    hp: baseEnemy.maxHp,
+    maxHp,
+    hp: maxHp,
     nextIntent: randomFrom(baseEnemy.intents)
   };
 }
@@ -895,10 +899,10 @@ function renderYouWonOverlay() {
   const showOverlay = state.gameOver && state.player.hp > 0;
   els.youWonOverlay.classList.toggle('hidden', !showOverlay);
   els.youWonOverlay.setAttribute('aria-hidden', showOverlay ? 'false' : 'true');
-  els.youDiedOverlay.classList.add('hidden');
-  els.youDiedOverlay.setAttribute('aria-hidden', 'true');
 
   if (showOverlay) {
+    els.youDiedOverlay.classList.add('hidden');
+    els.youDiedOverlay.setAttribute('aria-hidden', 'true');
     els.rewardChestOverlay.classList.add('hidden');
     els.rewardChestOverlay.setAttribute('aria-hidden', 'true');
     els.rewardChoices.innerHTML = '';
@@ -909,10 +913,10 @@ function renderYouDiedOverlay() {
   const showOverlay = state.gameOver && state.player.hp <= 0;
   els.youDiedOverlay.classList.toggle('hidden', !showOverlay);
   els.youDiedOverlay.setAttribute('aria-hidden', showOverlay ? 'false' : 'true');
-  els.youWonOverlay.classList.add('hidden');
-  els.youWonOverlay.setAttribute('aria-hidden', 'true');
 
   if (showOverlay) {
+    els.youWonOverlay.classList.add('hidden');
+    els.youWonOverlay.setAttribute('aria-hidden', 'true');
     els.rewardChestOverlay.classList.add('hidden');
     els.rewardChestOverlay.setAttribute('aria-hidden', 'true');
     els.rewardChoices.innerHTML = '';
