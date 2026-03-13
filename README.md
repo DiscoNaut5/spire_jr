@@ -29,11 +29,19 @@ Because results are shown as visible hearts/shields and animate step-by-step, ki
 7. If hero hearts reach 0, the run ends.
 8. Beat all fights in the run to win.
 
-## Requirements
+## Run the game
+
+### Run remotely (easiest)
+
+Play it directly in your browser:
+
+`https://disconaut5.github.io/spire_jr/spire.html`
+
+### Run locally
+
+Requirements:
 
 - `python3`
-
-## Run the game
 
 From the project root:
 
