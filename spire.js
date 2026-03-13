@@ -22,22 +22,25 @@ const GAME_CONFIG = {
     { id: 'atk3', type: 'attack', value: 6, cost: 1, icon: '🗡️', label: 'Chain Lightning', artSrc: 'assets/mega_bonk.png' },
     { id: 'atk4', type: 'attack', value: 4, cost: 1, icon: '🗡️', label: 'Fireball', artSrc: 'assets/fireball.png' },
     { id: 'atk5', type: 'attack', value: 5, cost: 1, icon: '🗡️', label: 'Fart in a Jar', artSrc: 'assets/fartjar.png' },
+    { id: 'atk6', type: 'attack', value: 5, cost: 1, icon: '🗡️', label: 'Take Me out to the Ball Game', artSrc: 'assets/baseball_dog.png' },
+    { id: 'atk7', type: 'attack', value: 7, cost: 1, icon: '🗡️', label: 'Release the Beetles!', artSrc: 'assets/beetles.png' },
     { id: 'blk1', type: 'block', value: 2, cost: 1, icon: '🛡️', label: 'Hide', artSrc: 'assets/hide.png' },
-    { id: 'blk2', type: 'block', value: 3, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/super_defend.png' },
-    { id: 'blk3', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/defend.png' },
-    { id: 'blk4', type: 'block', value: 6, cost: 1, icon: '🛡️', label: 'Distract with Octopus', artSrc: 'assets/octopus.png' },
+    { id: 'blk2', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/super_defend.png' },
+    { id: 'blk3', type: 'block', value: 5, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/defend.png' },
+    { id: 'blk4', type: 'block', value: 10, cost: 1, icon: '🛡️', label: 'Distract with Octopus', artSrc: 'assets/octopus.png' },
     { id: 'heal1', type: 'heal', value: 3, cost: 1, icon: '💖', label: 'Neosporin', artSrc: 'assets/neosporin.png' },
-    { id: 'heal2', type: 'heal', value: 5, cost: 1, icon: '💖', label: 'Magic Potion', artSrc: 'assets/super_potion.png' }
+    { id: 'heal2', type: 'heal', value: 5, cost: 1, icon: '💖', label: 'Magic Potion', artSrc: 'assets/super_potion.png' },
+    { id: 'heal3', type: 'heal', value: 8, cost: 1, icon: '💖', label: 'Roast Beast', artSrc: 'assets/roast_beast.png' }
   ],
   enemies: [
-    { name: 'Bats!', artSrc: 'assets/bats.png', maxHp: 7, intents: [1, 2, 2], battlefieldId: 'dungeon' },
-    { name: 'Birds!', artSrc: 'assets/birds.png', maxHp: 8, intents: [1, 2, 2], battlefieldId: 'beach-castle' },
-    { name: 'Leech', artSrc: 'assets/leech.png', maxHp: 9, intents: [1, 2, 2], battlefieldId: 'mars' },
-    { name: 'Evil Snail', artSrc: 'assets/snail.png', maxHp: 10, intents: [1, 2, 2], battlefieldId: 'mars' },
-    { name: 'Evil Tardigrade', artSrc: 'assets/tardigrade.png', maxHp: 14, intents: [1, 2, 3], battlefieldId: 'mars' },
-    { name: '🐉 Dragon', artSrc: 'assets/dragon.png', maxHp: 18, intents: [3, 3, 4], attackFx: '🔥🔥🔥', battlefieldId: 'disney-castle' },
-    { name: 'Broccoli Rob', artSrc: 'assets/broccoli.png', maxHp: 20, intents: [4, 4, 5], battlefieldId: 'enchanted-forest' },
-    { name: 'Dogs!', artSrc: 'assets/dogs.png', maxHp: 24, intents: [3, 8, 9], battlefieldId: 'haunted-mansion' },
+    { name: 'Bats!', artSrc: 'assets/bats.png', maxHp: 7, intents: [1, 2, 3], battlefieldId: 'dungeon' },
+    { name: 'Birds!', artSrc: 'assets/birds.png', maxHp: 8, intents: [1, 3, 4], battlefieldId: 'beach-castle' },
+    { name: 'Leech', artSrc: 'assets/leech.png', maxHp: 9, intents: [1, 2, 5], battlefieldId: 'mars' },
+    { name: 'Evil Snail', artSrc: 'assets/snail.png', maxHp: 10, intents: [1, 2, 2, 6], battlefieldId: 'mars' },
+    { name: 'Evil Tardigrade', artSrc: 'assets/tardigrade.png', maxHp: 14, intents: [1, 2, 3, 6], battlefieldId: 'mars' },
+    { name: '🐉 Dragon', artSrc: 'assets/dragon.png', maxHp: 18, intents: [3, 3, 4, 7], attackFx: '🔥🔥🔥', battlefieldId: 'disney-castle' },
+    { name: 'Broccoli Rob', artSrc: 'assets/broccoli.png', maxHp: 20, intents: [4, 4, 5, 8], battlefieldId: 'enchanted-forest' },
+    { name: 'Dogs!', artSrc: 'assets/dogs.png', maxHp: 24, intents: [3, 8, 9, 10], battlefieldId: 'haunted-mansion' },
   ]
 };
 
@@ -774,6 +777,15 @@ async function playCard(cardUid, cardElement) {
   }
 
   state.turnLocked = true;
+  const handButtons = Array.from(els.hand.querySelectorAll('.card'));
+  handButtons.forEach(button => {
+    if (button === cardElement) {
+      return;
+    }
+
+    button.disabled = true;
+    button.classList.add('disabled');
+  });
 
   await showCardPlayAnimation(cardElement);
 
@@ -1127,6 +1139,15 @@ function showHeroPotionAnimation() {
 }
 
 function renderHand() {
+  const previousCardRects = new Map();
+  Array.from(els.hand.querySelectorAll('.card')).forEach(cardEl => {
+    const uid = cardEl.getAttribute('data-card-uid');
+    if (!uid) {
+      return;
+    }
+    previousCardRects.set(uid, cardEl.getBoundingClientRect());
+  });
+
   els.hand.innerHTML = '';
 
   state.hand.forEach(card => {
@@ -1147,10 +1168,43 @@ function renderHand() {
       '<div class="card-title">' + card.label + '</div>' +
       '<div class="card-media">' + cardArt + '</div>' +
       '<div class="card-meta"><div class="card-stat-icon">' + getCardTypeStatIcon(card.type) + '</div><div class="card-value">' + card.value + '</div></div>';
+    button.setAttribute('data-card-uid', card.uid);
 
     button.disabled = isDisabled;
     button.addEventListener('click', event => playCard(card.uid, event.currentTarget));
     els.hand.appendChild(button);
+  });
+
+  if (previousCardRects.size === 0) {
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    Array.from(els.hand.querySelectorAll('.card')).forEach(cardEl => {
+      const uid = cardEl.getAttribute('data-card-uid');
+      if (!uid || !previousCardRects.has(uid)) {
+        return;
+      }
+
+      const oldRect = previousCardRects.get(uid);
+      const newRect = cardEl.getBoundingClientRect();
+      const deltaX = oldRect.left - newRect.left;
+      const deltaY = oldRect.top - newRect.top;
+
+      if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) {
+        return;
+      }
+
+      cardEl.style.transition = 'none';
+      cardEl.style.transform = 'translate(' + deltaX + 'px, ' + deltaY + 'px)';
+      void cardEl.offsetWidth;
+      cardEl.style.transition = 'transform 560ms cubic-bezier(0.2, 0.78, 0.24, 1)';
+      cardEl.style.transform = '';
+
+      window.setTimeout(() => {
+        cardEl.style.transition = '';
+      }, 600);
+    });
   });
 }
 
