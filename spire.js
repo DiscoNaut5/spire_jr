@@ -16,6 +16,7 @@ const GAME_CONFIG = {
     { id: 'blk1', type: 'block', value: 2, cost: 1, icon: '🛡️', label: 'Hide', artSrc: 'assets/hide.png' },
     { id: 'blk2', type: 'block', value: 3, cost: 1, icon: '🛡️', label: 'Defend', artSrc: 'assets/super_defend.png' },
     { id: 'blk3', type: 'block', value: 4, cost: 1, icon: '🛡️', label: 'Super Defend', artSrc: 'assets/defend.png' },
+    { id: 'blk4', type: 'block', value: 6, cost: 1, icon: '🛡️', label: 'Distract with Octopus', artSrc: 'assets/octopus.png' },
     { id: 'heal1', type: 'heal', value: 3, cost: 1, icon: '💖', label: 'Neosporin', artSrc: 'assets/neosporin.png' },
     { id: 'heal2', type: 'heal', value: 5, cost: 1, icon: '💖', label: 'Magic Potion', artSrc: 'assets/super_potion.png' }
   ],
