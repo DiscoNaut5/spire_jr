@@ -294,6 +294,22 @@ function getCardSummary(card) {
   return card.icon + ' ' + card.label;
 }
 
+function getCardTypeStatIcon(cardType) {
+  if (cardType === 'attack') {
+    return '⚔️';
+  }
+
+  if (cardType === 'block') {
+    return '🛡️';
+  }
+
+  if (cardType === 'heal') {
+    return '❤️';
+  }
+
+  return '';
+}
+
 function setActiveTouchZoomCard(nextCard) {
   if (activeTouchZoomCard === nextCard) {
     return;
@@ -813,8 +829,9 @@ function renderHand() {
       : '<div class="card-icon">' + card.icon + '</div>';
 
     button.innerHTML =
+      '<div class="card-title">' + card.label + '</div>' +
       '<div class="card-media">' + cardArt + '</div>' +
-      '<div class="card-meta"><div class="card-value">' + card.value + '</div><div class="card-label">' + card.label + '</div></div>';
+      '<div class="card-meta"><div class="card-stat-icon">' + getCardTypeStatIcon(card.type) + '</div><div class="card-value">' + card.value + '</div></div>';
 
     button.disabled = isDisabled;
     bindCardTouchZoom(button);
@@ -877,8 +894,9 @@ function renderRewards() {
       : '<div class="card-icon">' + card.icon + '</div>';
 
     button.innerHTML =
+      '<div class="card-title">' + card.label + '</div>' +
       '<div class="card-media">' + cardArt + '</div>' +
-      '<div class="card-meta"><div class="card-value">' + card.value + '</div><div class="card-label">' + card.label + '</div></div>';
+      '<div class="card-meta"><div class="card-stat-icon">' + getCardTypeStatIcon(card.type) + '</div><div class="card-value">' + card.value + '</div></div>';
 
     button.addEventListener('click', () => pickReward(card.id, button));
     bindCardTouchZoom(button);

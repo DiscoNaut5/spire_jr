@@ -236,21 +236,21 @@ body {
 
 .battle-row {
   display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) 170px;
+  grid-template-columns: 84px minmax(0, 1fr) 114px;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .pile-column {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pile-btn {
-  width: 116px;
-  padding: 8px 12px;
-  font-size: 14px;
-  border-radius: 12px;
+  width: 80px;
+  padding: 6px 6px;
+  font-size: 12px;
+  border-radius: 10px;
 }
 
 .pile-modal {
@@ -344,8 +344,11 @@ body {
   overflow: hidden;
   align-self: center;
   justify-self: end;
-  width: 170px;
-  min-height: 72px;
+  width: 92px;
+  min-height: 176px;
+  padding: 12px 8px;
+  line-height: 1.05;
+  font-size: 24px;
   border: 1px solid rgba(190, 204, 226, 0.45);
   background: linear-gradient(165deg, #5b6782 0%, #485471 52%, #353f59 100%);
   color: #eaf1ff;
@@ -431,13 +434,14 @@ body {
 
 @media (max-width: 1180px) {
   .battle-row {
-    grid-template-columns: 108px minmax(0, 1fr) 150px;
-    gap: 10px;
+    grid-template-columns: 78px minmax(0, 1fr) 106px;
+    gap: 8px;
   }
 
   .hand {
-    grid-template-columns: repeat(4, minmax(94px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(4, minmax(88px, 1fr));
+    gap: 5px;
+    padding-right: 16px;
   }
 
   .card {
@@ -450,7 +454,7 @@ body {
   .card:focus-visible,
   .card.touch-zoom,
   .card:active {
-    transform: translateY(-12px) scale(1.22);
+    transform: translateY(-8px) scale(1.12);
   }
 
   .card-media {
@@ -461,12 +465,13 @@ body {
 
 .hand {
   display: grid;
-  grid-template-columns: repeat(5, minmax(110px, 1fr));
+  grid-template-columns: repeat(5, minmax(98px, 1fr));
   justify-content: start;
-  gap: 14px;
+  gap: 6px;
   min-width: 0;
   width: 100%;
   min-height: 0;
+  padding-right: 18px;
 }
 
 .reward-chest-overlay {
@@ -781,7 +786,7 @@ body {
   padding: 10px 8px 12px;
   border: 2px solid rgba(255, 255, 255, 0.06);
   border-radius: 18px;
-  background: linear-gradient(180deg, var(--card), #22314f);
+  background: linear-gradient(180deg, #273553, #18243c);
   color: var(--text);
   text-align: center;
   cursor: pointer;
@@ -798,17 +803,13 @@ body {
   z-index: 1;
   pointer-events: none;
   border-radius: 14px;
-  border: 1px solid rgba(255, 226, 166, 0.45);
+  border: 1px solid rgba(255, 226, 166, 0.5);
   background:
-    radial-gradient(28px 28px at 10% 10%, transparent 62%, rgba(255, 225, 165, 0.55) 63% 67%, transparent 68%),
-    radial-gradient(28px 28px at 90% 10%, transparent 62%, rgba(255, 225, 165, 0.55) 63% 67%, transparent 68%),
-    radial-gradient(28px 28px at 10% 90%, transparent 62%, rgba(255, 225, 165, 0.45) 63% 67%, transparent 68%),
-    radial-gradient(28px 28px at 90% 90%, transparent 62%, rgba(255, 225, 165, 0.45) 63% 67%, transparent 68%),
-    radial-gradient(8px 8px at 10% 10%, rgba(255, 232, 186, 0.45), transparent 75%),
-    radial-gradient(8px 8px at 90% 10%, rgba(255, 232, 186, 0.45), transparent 75%),
-    radial-gradient(8px 8px at 10% 90%, rgba(255, 232, 186, 0.36), transparent 75%),
-    radial-gradient(8px 8px at 90% 90%, rgba(255, 232, 186, 0.36), transparent 75%),
-    linear-gradient(90deg, transparent 22%, rgba(255, 225, 165, 0.26) 34%, rgba(255, 225, 165, 0.26) 66%, transparent 78%),
+    conic-gradient(from 225deg at 11% 12%, rgba(255, 225, 165, 0.66) 0 10deg, transparent 10deg 360deg),
+    conic-gradient(from -45deg at 89% 12%, rgba(255, 225, 165, 0.66) 0 10deg, transparent 10deg 360deg),
+    conic-gradient(from 135deg at 11% 88%, rgba(255, 225, 165, 0.56) 0 10deg, transparent 10deg 360deg),
+    conic-gradient(from 45deg at 89% 88%, rgba(255, 225, 165, 0.56) 0 10deg, transparent 10deg 360deg),
+    linear-gradient(90deg, rgba(255, 225, 165, 0.16) 0%, transparent 24%, rgba(0, 0, 0, 0.18) 50%, transparent 76%, rgba(255, 225, 165, 0.16) 100%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%, transparent 68%, rgba(0, 0, 0, 0.14));
 }
 
@@ -821,12 +822,10 @@ body {
   border-radius: 12px;
   border: 1px solid rgba(255, 225, 165, 0.24);
   background:
-    radial-gradient(20px 9px at 50% 10%, rgba(255, 225, 165, 0.34), transparent 72%),
-    radial-gradient(20px 9px at 50% 90%, rgba(255, 225, 165, 0.3), transparent 72%),
-    radial-gradient(16px 7px at 38% 10%, rgba(255, 225, 165, 0.22), transparent 72%),
-    radial-gradient(16px 7px at 62% 10%, rgba(255, 225, 165, 0.22), transparent 72%),
-    radial-gradient(16px 7px at 38% 90%, rgba(255, 225, 165, 0.2), transparent 72%),
-    radial-gradient(16px 7px at 62% 90%, rgba(255, 225, 165, 0.2), transparent 72%),
+    linear-gradient(90deg, transparent 14%, rgba(255, 227, 170, 0.28) 24%, transparent 34%),
+    linear-gradient(-90deg, transparent 14%, rgba(255, 227, 170, 0.28) 24%, transparent 34%),
+    linear-gradient(180deg, transparent 12%, rgba(255, 227, 170, 0.22) 22%, transparent 32%),
+    linear-gradient(0deg, transparent 12%, rgba(255, 227, 170, 0.18) 22%, transparent 32%),
     linear-gradient(180deg, transparent 18%, rgba(255, 225, 165, 0.14) 50%, transparent 82%);
 }
 
@@ -853,46 +852,46 @@ body {
   transform: translateY(-18px) scale(1.34);
   background: linear-gradient(180deg, var(--card-hover), #2a3a5f);
   box-shadow: 0 22px 40px rgba(0, 0, 0, 0.45);
-  z-index: 30;
+  z-index: 60;
 }
 
 .card.card-type-block {
-  background: linear-gradient(180deg, #2f6a3f, #224f31);
+  background: linear-gradient(180deg, #285938, #1a3f27);
 }
 
 .card.card-type-block:hover,
 .card.card-type-block:focus-visible {
-  background: linear-gradient(180deg, #3d7e4f, #2c6340);
+  background: linear-gradient(180deg, #336d44, #235234);
 }
 
 .card.card-type-block.touch-zoom {
-  background: linear-gradient(180deg, #3d7e4f, #2c6340);
+  background: linear-gradient(180deg, #336d44, #235234);
 }
 
 .card.card-type-attack {
-  background: linear-gradient(180deg, #8a2f34, #5f1f24);
+  background: linear-gradient(180deg, #6f262b, #44161a);
 }
 
 .card.card-type-attack:hover,
 .card.card-type-attack:focus-visible {
-  background: linear-gradient(180deg, #a33d43, #782a30);
+  background: linear-gradient(180deg, #8a3339, #5e2126);
 }
 
 .card.card-type-attack.touch-zoom {
-  background: linear-gradient(180deg, #a33d43, #782a30);
+  background: linear-gradient(180deg, #8a3339, #5e2126);
 }
 
 .card.card-type-heal {
-  background: linear-gradient(180deg, #b94f8d, #7d3460);
+  background: linear-gradient(180deg, #973f73, #5f2748);
 }
 
 .card.card-type-heal:hover,
 .card.card-type-heal:focus-visible {
-  background: linear-gradient(180deg, #cc5d9d, #944074);
+  background: linear-gradient(180deg, #af4d85, #742f58);
 }
 
 .card.card-type-heal.touch-zoom {
-  background: linear-gradient(180deg, #cc5d9d, #944074);
+  background: linear-gradient(180deg, #af4d85, #742f58);
 }
 
 .card {
@@ -911,7 +910,7 @@ body {
     transform: translateY(-18px) scale(1.34);
     background: linear-gradient(180deg, var(--card-hover), #2a3a5f);
     box-shadow: 0 22px 40px rgba(0, 0, 0, 0.45);
-    z-index: 30;
+    z-index: 35;
   }
 
   .card.card-type-block:hover {
@@ -961,6 +960,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: -8px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+  color: rgba(247, 244, 234, 0.92);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+  min-height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0 2px;
 }
 
 .card-icon {
@@ -977,9 +990,18 @@ body {
 
 .card-meta {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  width: 100%;
+  padding: 0 8px 10px;
+  gap: 6px;
+}
+
+.card-stat-icon {
+  font-size: 28px;
+  line-height: 1;
+  opacity: 1;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
 }
 
 .card-value {
@@ -1401,8 +1423,9 @@ body {
   }
 
   .hand {
-    grid-template-columns: repeat(3, minmax(120px, 160px));
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(102px, 148px));
+    gap: 5px;
+    padding-right: 12px;
   }
 
   .reward-choices {
@@ -1411,13 +1434,15 @@ body {
   }
 
   .pile-btn {
-    font-size: 13px;
-    padding: 7px 10px;
+    width: 76px;
+    font-size: 11px;
+    padding: 6px 5px;
   }
 
   .end-turn-side {
-    width: 140px;
-    min-height: 64px;
+    width: 78px;
+    min-height: 156px;
+    font-size: 21px;
   }
 
   .card {
@@ -1430,7 +1455,7 @@ body {
   .card:focus-visible,
   .card.touch-zoom,
   .card:active {
-    transform: translateY(-10px) scale(1.2);
+    transform: translateY(-7px) scale(1.1);
   }
 
   .card-cost {
@@ -1448,6 +1473,15 @@ body {
 
   .card-value {
     font-size: 30px;
+  }
+
+  .card-title {
+    font-size: 12px;
+    min-height: 24px;
+  }
+
+  .card-stat-icon {
+    font-size: 24px;
   }
 
   .btn {
