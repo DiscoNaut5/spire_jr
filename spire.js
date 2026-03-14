@@ -82,6 +82,7 @@ const els = {
   arenaPanel: document.getElementById('arenaPanel'),
   fightStage: document.getElementById('fightStage'),
   battleRow: document.getElementById('battleRow'),
+  modeBadge: document.getElementById('modeBadge'),
   rewardChoices: document.getElementById('rewardChoices'),
   hand: document.getElementById('hand'),
   endTurnBtn: document.getElementById('endTurnBtn')
@@ -92,6 +93,7 @@ let enemyColumnCenterRaf = 0;
 let heroAttackJiggleTimeout = 0;
 let enemyAttackJiggleTimeout = 0;
 let enemyHitJiggleTimeout = 0;
+let forceHandAlignLeftOnNextRender = false;
 
 function makeUid() {
   return 'card-' + nextUid++;
@@ -130,6 +132,67 @@ function sleep(ms) {
   return new Promise(resolve => {
     window.setTimeout(resolve, ms);
   });
+}
+
+function shouldUsePhoneMode() {
+  const query = new URLSearchParams(window.location.search);
+  const forced = query.get('phone');
+  if (forced === '1' || forced === 'true') {
+    return true;
+  }
+  if (forced === '0' || forced === 'false') {
+    return false;
+  }
+
+  const ua = navigator.userAgent || '';
+  const isPhoneUa = /iPhone|iPod|Android.*Mobile|Windows Phone|webOS|BlackBerry/i.test(ua);
+  const isTabletUa = /iPad|Tablet|Nexus 7|Nexus 10|SM-T|Kindle|Silk/i.test(ua);
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  const touchPoints = navigator.maxTouchPoints || 0;
+  const screenWidth = window.screen && window.screen.width ? window.screen.width : window.innerWidth;
+  const screenHeight = window.screen && window.screen.height ? window.screen.height : window.innerHeight;
+  const screenShortSide = Math.min(screenWidth, screenHeight);
+  const screenLongSide = Math.max(screenWidth, screenHeight);
+  const shortSide = Math.min(window.innerWidth, window.innerHeight);
+
+  if (isPhoneUa) {
+    return true;
+  }
+
+  if (isTabletUa) {
+    return false;
+  }
+
+  // Real phones in landscape can exceed width breakpoints; detect by touch + physical screen bounds.
+  if (touchPoints > 0 && coarsePointer && screenShortSide <= 500 && screenLongSide <= 950) {
+    return true;
+  }
+
+  // Coarse-pointer narrow screens are likely phones; still allows desktop testing in very narrow windows.
+  if (coarsePointer && shortSide <= 500) {
+    return true;
+  }
+
+  return shortSide <= 430;
+}
+
+function updatePhoneModeClass() {
+  const root = document.documentElement;
+  const query = new URLSearchParams(window.location.search);
+  const forced = query.get('phone');
+  const forcedEnabled = forced === '1' || forced === 'true';
+  const phoneMode = shouldUsePhoneMode();
+  const shortMode = phoneMode && window.innerHeight <= 760;
+
+  root.classList.toggle('phone-mode', phoneMode);
+  root.classList.toggle('phone-mode-short', shortMode);
+
+  if (els.modeBadge) {
+    els.modeBadge.textContent = phoneMode
+      ? (forcedEnabled ? 'Mobile Version (Forced)' : 'Mobile Version')
+      : '';
+    els.modeBadge.setAttribute('aria-hidden', phoneMode ? 'false' : 'true');
+  }
 }
 
 function centerEnemyBetweenColumns() {
@@ -756,6 +819,9 @@ async function playCard(cardUid, cardElement) {
   }
 
   const card = state.hand[handIndex];
+  if (handIndex === 0) {
+    forceHandAlignLeftOnNextRender = true;
+  }
   if (!spendEnergy(card.cost)) {
     setMessage('You need more energy for that card.');
     render();
@@ -1125,14 +1191,28 @@ function showHeroPotionAnimation() {
 }
 
 function renderHand() {
-  const previousCardRects = new Map();
+  const previousCardOffsets = new Map();
+  const previousCardOrder = [];
+  const previousHandScrollLeft = els.hand.scrollLeft;
+  const shouldForceLeftAlign = forceHandAlignLeftOnNextRender;
   Array.from(els.hand.querySelectorAll('.card')).forEach(cardEl => {
     const uid = cardEl.getAttribute('data-card-uid');
     if (!uid) {
       return;
     }
-    previousCardRects.set(uid, cardEl.getBoundingClientRect());
+    previousCardOrder.push(uid);
+    previousCardOffsets.set(uid, {
+      left: cardEl.offsetLeft
+    });
   });
+
+  const nextCardOrder = state.hand.map(card => card.uid);
+  const shouldAnimateShift =
+    previousCardOrder.length > 0 &&
+    (
+      previousCardOrder.length !== nextCardOrder.length ||
+      previousCardOrder.some((uid, index) => uid !== nextCardOrder[index])
+    );
 
   els.hand.innerHTML = '';
 
@@ -1161,35 +1241,49 @@ function renderHand() {
     els.hand.appendChild(button);
   });
 
-  if (previousCardRects.size === 0) {
+  const maxHandScroll = Math.max(0, els.hand.scrollWidth - els.hand.clientWidth);
+  const anchorToLeftEdge = shouldForceLeftAlign || previousHandScrollLeft <= 6;
+  forceHandAlignLeftOnNextRender = false;
+  els.hand.scrollLeft = anchorToLeftEdge
+    ? 0
+    : Math.min(previousHandScrollLeft, maxHandScroll);
+  const nextHandScrollLeft = els.hand.scrollLeft;
+
+  if (!shouldAnimateShift || shouldForceLeftAlign) {
     return;
   }
 
   window.requestAnimationFrame(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
     Array.from(els.hand.querySelectorAll('.card')).forEach(cardEl => {
       const uid = cardEl.getAttribute('data-card-uid');
-      if (!uid || !previousCardRects.has(uid)) {
+      if (!uid || !previousCardOffsets.has(uid)) {
         return;
       }
 
-      const oldRect = previousCardRects.get(uid);
-      const newRect = cardEl.getBoundingClientRect();
-      const deltaX = oldRect.left - newRect.left;
-      const deltaY = oldRect.top - newRect.top;
+      const oldOffset = previousCardOffsets.get(uid);
+      const oldVisibleLeft = oldOffset.left - previousHandScrollLeft;
+      const newVisibleLeft = cardEl.offsetLeft - nextHandScrollLeft;
+      const rawDeltaX = oldVisibleLeft - newVisibleLeft;
+      const maxDeltaX = Math.max(cardEl.offsetWidth * 1.1, 96);
+      const deltaX = Math.max(-maxDeltaX, Math.min(maxDeltaX, rawDeltaX));
 
-      if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) {
+      if (Math.abs(deltaX) < 0.5) {
         return;
       }
 
       cardEl.style.transition = 'none';
-      cardEl.style.transform = 'translate(' + deltaX + 'px, ' + deltaY + 'px)';
+      cardEl.style.transform = 'translateX(' + deltaX + 'px)';
       void cardEl.offsetWidth;
-      cardEl.style.transition = 'transform 560ms cubic-bezier(0.2, 0.78, 0.24, 1)';
+      cardEl.style.transition = 'transform 440ms cubic-bezier(0.22, 0.64, 0.26, 1)';
       cardEl.style.transform = '';
 
       window.setTimeout(() => {
         cardEl.style.transition = '';
-      }, 600);
+      }, 470);
     });
   });
 }
@@ -1427,7 +1521,14 @@ document.addEventListener('keydown', event => {
     closePileModal();
   }
 });
-window.addEventListener('resize', scheduleEnemyColumnCentering);
+window.addEventListener('resize', () => {
+  updatePhoneModeClass();
+  scheduleEnemyColumnCentering();
+});
+window.addEventListener('orientationchange', () => {
+  updatePhoneModeClass();
+  scheduleEnemyColumnCentering();
+});
 els.enemyBaseImg.addEventListener('load', scheduleEnemyColumnCentering);
 els.enemyArt.addEventListener('animationend', event => {
   if (event.target !== els.enemyArt) {
@@ -1437,4 +1538,5 @@ els.enemyArt.addEventListener('animationend', event => {
   scheduleEnemyColumnCentering();
 });
 
+updatePhoneModeClass();
 resetState();
